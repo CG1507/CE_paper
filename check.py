@@ -33,6 +33,7 @@ def main():
 	file = parse("/media/dell/Seagate Expansion Drive/CE_paper/Amazon Dataset/categories/Books/reviews.json.gz")
 	items, no_of_items = no_items_reviewed(file)
 	print(no_of_items)
+	print(items)
 	print(len(items))
 
 if __name__ == "__main__":
