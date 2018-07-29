@@ -90,6 +90,12 @@ def get_day(date_time):
 	return datetime.date(int(year), int(month), int(date)).isoweekday()
 
 def convert(timestamp):
+	"""
+	
+	Args:
+
+	Returns:
+	"""
 	date_time = datetime.datetime.fromtimestamp(int(timestamp)).strftime('%Y-%m-%d %H:%M:%S')
 	return str(date_time)
 
