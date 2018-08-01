@@ -35,6 +35,7 @@ def main():
 	print(no_of_items)
 	print(items)
 	print(len(items))
+	print(len(no_of_items))
 
 if __name__ == "__main__":
 	main()
