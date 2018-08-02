@@ -91,7 +91,8 @@ def get_day(date_time):
 
 def convert(timestamp):
 	"""
-	
+	Convert timestamp in date-time format.
+
 	Args:
 
 	Returns:
