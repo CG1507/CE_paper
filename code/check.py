@@ -2,11 +2,25 @@ import gzip
 import json
 
 def parse(path):
+	"""
+
+	Args:
+
+	Returns:
+
+	"""
 	g = gzip.open(path, 'r')
 	for l in g:
 		yield eval(l)
 
 def no_items_reviewed(file):
+	"""
+
+	Args:
+
+	Returns:
+	
+	"""
 	items = []
 	no_of_items = {}
 	
