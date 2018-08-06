@@ -101,6 +101,9 @@ def convert(timestamp):
 	return str(date_time)
 
 def test():
+	"""
+	Test function of unixtime
+	"""
 	timestamp = "1131750055"
 	date_time = convert(timestamp)
 	print(date_time)
