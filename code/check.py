@@ -3,7 +3,8 @@ import json
 
 def parse(path):
 	"""
-
+	It parse zip json file.
+	
 	Args:
 
 	Returns:
