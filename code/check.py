@@ -6,9 +6,10 @@ def parse(path):
 	It parse zip json file.
 	
 	Args:
+		path (string): address of file
 
 	Returns:
-
+		It is generator.
 	"""
 	g = gzip.open(path, 'r')
 	for l in g:
