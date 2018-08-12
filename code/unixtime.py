@@ -94,15 +94,16 @@ def convert(timestamp):
 	Convert timestamp in date-time format.
 
 	Args:
-
+		timestamp:
 	Returns:
+		date_time:
 	"""
 	date_time = datetime.datetime.fromtimestamp(int(timestamp)).strftime('%Y-%m-%d %H:%M:%S')
 	return str(date_time)
 
 def test():
 	"""
-	Test function of unixtime
+	Test function of unixtime.
 	"""
 	timestamp = "1131750055"
 	date_time = convert(timestamp)
