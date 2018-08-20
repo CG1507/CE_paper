@@ -105,7 +105,7 @@ def test():
 	"""
 	Test function of unixtime.
 	"""
-	timestamp = "1131750055"
+	timestamp = "1208217600"
 	date_time = convert(timestamp)
 	print(date_time)
 	print('Day', get_day(date_time))
