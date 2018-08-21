@@ -1,57 +1,39 @@
 import gzip
 import json
+import unixtime
 
 def parse(path):
-	"""
-	It parse zip json file.
-	
-	Args:
-		path (string): address of file
-
-	Returns:
-		It is generator.
-	"""
 	g = gzip.open(path, 'r')
 	for l in g:
 		yield eval(l)
 
-def no_items_reviewed(file):
-	"""
-
-	Args:
-
-	Returns:
-	
-	"""
+def test(file):
 	items = []
 	no_of_items = {}
 	
+	a= []
 	line_no = 0
+	l = 1
 	for line in file:
-		json_line = json.loads(json.dumps(line))
-		item = str(json_line['asin'])
-	
-		if item in items:
-			no_of_items[item] += 1
-		else:
-			items.append(item)
-			no_of_items[item] = 1
-		
-		line_no += 1
-		if line_no % 100000 == 0:
-			print(line_no)
-			print(no_of_items)
-			print(len(items))
-
-	return items, no_of_items
+		try:
+			json_line = json.loads(json.dumps(line))
+			unixReviewTime = str(json_line['unixReviewTime'])
+			reviewerName = str(json_line['reviewerName'])
+			reviewText = str(json_line['reviewText'])
+			reviewTime = str(json_line['reviewTime'])
+			summary = str(json_line['summary'])
+			helpful = str(json_line['helpful'])
+			overall = str(json_line['overall'])
+			date = unixtime.convert(unixReviewTime)
+			a.append(reviewText)
+			print(l)
+			l += 1
+		except:
+			pass
 
 def main():
 	file = parse("/media/dell/Seagate Expansion Drive/CE_paper/Amazon Dataset/categories/Books/reviews.json.gz")
-	items, no_of_items = no_items_reviewed(file)
-	print(no_of_items)
-	print(items)
-	print(len(items))
-	print(len(no_of_items))
+	test(file)
 
 if __name__ == "__main__":
 	main()
