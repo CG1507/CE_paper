@@ -32,7 +32,7 @@ def test(file):
 			pass
 
 def main():
-	file = parse("/media/dell/Seagate Expansion Drive/CE_paper/Amazon Dataset/categories/Books/reviews.json.gz")
+	file = parse("/media/dell/Seagate Expansion Drive/CE_paper/Dataset/Amazon Dataset/categories/Books/reviews.json.gz")
 	test(file)
 
 if __name__ == "__main__":
