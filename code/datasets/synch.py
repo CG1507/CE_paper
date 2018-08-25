@@ -21,27 +21,80 @@ def find_product_json(asin, tmp_category_dir, category):
 	return None
 
 def synch_data(paths, tmp_category_dir):
-	categories_file_pointer = {}
+	merged_categories_files = []
 	all_categories_one_file_pointer = io.create_file('/media/dell/Seagate Expansion Drive/CE_paper/Implementation/tmp_data/merged_sorted_reviews.json')
+	
+	no_of_meta = {}
+	category_names = io.list_dirs(tmp_category_dir)
+	for category in category_names:
+		no_of_meta[category] = len(io.list_dirs(tmp_category_dir + category + '/meta_chunks/'))
+
+	prev_category = ''
+	meta_objects = []
+
+	path_no = 1
 	for path in paths:
 		category = path[1]
 		file_path = path[0]
+		
+		if prev_category != category:
+			meta_objects = []
+		meta_dir_path = tmp_category_dir + category + '/meta_chunks/'
+		prev_category = category
+
 		reading_file_pointer = io.read_file(file_path)
+		line_no = 1
 		for line in reading_file_pointer:
-			json_line = json_loads(line)
-			asin = json_line['asin']
-			product_json = find_product_json(asin, tmp_category_dir, category)
-			if product_json == None:
-				print('NOT FOUND', '\ncategory: ', category, '\nfile: ', file_path, '\nasin: ', asin)
-			else:
-				merged_json = dict(json_line, **product_json)
-				if category in categories_file_pointer:
-					io.write_line(categories_file_pointer[category], json.dumps(merged_json) + '\n')
-					io.write_line(all_categories_one_file_pointer, json.dumps(merged_json) + '\n')
+			try:
+				json_line = json.loads(line)
+				asin = json_line['asin']
+				#------------------------------------------------------------------------
+				product_json = None
+				if no_of_meta[category] <= 6:
+					for meta in meta_objects:
+						if product_json == None:
+							try:
+								product_json = meta[asin]
+							except:
+								product_json = None
+								pass
+						else:
+							break
+
+					if len(meta_objects) < no_of_meta[category] and product_json == None:
+						for i in range(no_of_meta[category]):
+							if (i + 1) > len(meta_objects):
+								if product_json == None:
+									try:
+										meta_objects.append(get_pickle_object(meta_dir_path + 'meta' + str(i + 1) + '.pkl'))
+										product_json = meta_objects[i][asin]
+									except:
+										product_json = None
+										pass
+								else:
+									break
 				else:
-					categories_file_pointer[category] = io.create_file(tmp_category_dir + category + '/merged.json')
-					io.write_line(categories_file_pointer[category], json.dumps(merged_json) + '\n')
-					io.write_line(all_categories_one_file_pointer, json.dumps(merged_json) + '\n')
+					product_json = find_product_json(asin, tmp_category_dir, category)
+				#------------------------------------------------------------------------
+				if product_json == None:
+					print('NOT FOUND', '\ncategory: ', category, '\nfile: ', file_path, '\nasin: ', asin)
+				else:
+					merged_json = dict(json_line, **product_json)
+					if category in merged_categories_files:
+						current_file_pointer = io.append_file(tmp_category_dir + category + '/merged.json')
+						io.write_line(current_file_pointer, json.dumps(merged_json) + '\n')
+						io.write_line(all_categories_one_file_pointer, json.dumps(merged_json) + '\n')
+					else:
+						current_file_pointer = io.append_file(tmp_category_dir + category + '/merged.json')
+						io.write_line(current_file_pointer, json.dumps(merged_json) + '\n')
+						io.write_line(all_categories_one_file_pointer, json.dumps(merged_json) + '\n')
+						merged_categories_files.append(category)
+				line_no += 1
+			except:
+				print('🐛 ERROR:\nFILE_PATH:', file_path, '\nLINE_NO:', line_no, '\nLINE:', line)
+				pass
+		print('Path no.', path_no, 'DONE:', file_path)
+		path_no += 1
 
 def get_sorted_files_path(tmp_category_dir):
 	total_years = ['1996', '1997', '1998', '1999', '2000', '2001', '2002', '2003', '2004', '2005', '2006', '2007', '2008', '2009', '2010', '2011', '2012', '2013', '2014'] 
@@ -75,6 +128,7 @@ def get_sorted_files_path(tmp_category_dir):
 
 def write_merged_data(tmp_category_dir):
 	paths = get_sorted_files_path(tmp_category_dir)
+	print('No. of files:', len(paths))
 	synch_data(paths, tmp_category_dir)
 
 def test():
