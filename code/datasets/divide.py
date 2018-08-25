@@ -5,6 +5,21 @@ import json
 import pickle
 import os
 
+def write_meta_index(tmp_category_dir, category_names):
+	for category in category_names:
+		meta_dir_path = tmp_category_dir + category + '/meta_chunks/'
+		no_of_meta_files = len(io.list_dirs(meta_dir_path))
+		index = {}
+		for i in range(no_of_meta_files):
+			meta_file_pointer = open(meta_dir_path + 'meta' + str(i + 1) + '.pkl', 'rb')
+			meta = pickle.load(meta_file_pointer)
+			all_asin = meta.keys()
+			for asin in all_asin:
+				index[asin] = i + 1
+		index_file_pointer = open(meta_dir_path + 'index.pkl', 'wb')
+		pickle.dump(index, index_file_pointer)
+		print(category + ': Index file saved')
+
 def create_month_dirs(tmp_category_dir):
 	if not os.path.exists(tmp_category_dir):
 		os.makedirs(tmp_category_dir)
@@ -102,6 +117,7 @@ def create_categories(data_folder, category_names = '', tmp_category_dir = '../.
 	
 	write_meta_chunks(meta_file_pointer, category_names, tmp_category_dir)
 	write_reviews_by_date(reviews_file_pointer, category_names, tmp_category_dir)
+	write_meta_index(tmp_category_dir, category_names)
 
 def test():
 	data_folder = "/media/dell/Seagate Expansion Drive/CE_paper/Dataset/Amazon Dataset/categories/"
