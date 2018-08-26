@@ -8,39 +8,29 @@ def get_pickle_object(file_path):
 	with open(file_path, 'rb') as f:
 		return pickle.load(f)
 
-def find_product_json(asin, tmp_category_dir, category):
-	meta_dir_path = tmp_category_dir + category + '/meta_chunks/'
-	meta_chunks_files = io.list_dirs(meta_dir_path)
-	for file in meta_chunks_files:
-		meta = get_pickle_object(meta_dir_path + file)
-		try:
-			product_json = meta[asin]
-			return product_json
-		except:
-			pass
-	return None
-
 def synch_data(paths, tmp_category_dir):
 	merged_categories_files = []
 	all_categories_one_file_pointer = io.create_file('/media/dell/Seagate Expansion Drive/CE_paper/Implementation/tmp_data/merged_sorted_reviews.json')
 	
-	no_of_meta = {}
-	category_names = io.list_dirs(tmp_category_dir)
-	for category in category_names:
-		no_of_meta[category] = len(io.list_dirs(tmp_category_dir + category + '/meta_chunks/'))
-
 	prev_category = ''
-	meta_objects = []
+	index = {}
+	index_file_pointer = None
 
 	path_no = 1
 	for path in paths:
 		category = path[1]
 		file_path = path[0]
-		
-		if prev_category != category:
-			meta_objects = []
 		meta_dir_path = tmp_category_dir + category + '/meta_chunks/'
+		
+		same_category_flag = True
+		if prev_category != category:
+			index_file_pointer = open(meta_dir_path + 'index.pkl', 'rb')
+			index = pickle.load(index_file_pointer)
+			same_category_flag = False
 		prev_category = category
+
+		prev_meta_file_no = ''
+		meta = {}
 
 		reading_file_pointer = io.read_file(file_path)
 		line_no = 1
@@ -48,34 +38,17 @@ def synch_data(paths, tmp_category_dir):
 			try:
 				json_line = json.loads(line)
 				asin = json_line['asin']
-				#------------------------------------------------------------------------
-				product_json = None
-				if no_of_meta[category] <= 6:
-					for meta in meta_objects:
-						if product_json == None:
-							try:
-								product_json = meta[asin]
-							except:
-								product_json = None
-								pass
-						else:
-							break
+				meta_file_no = str(index[asin])
 
-					if len(meta_objects) < no_of_meta[category] and product_json == None:
-						for i in range(no_of_meta[category]):
-							if (i + 1) > len(meta_objects):
-								if product_json == None:
-									try:
-										meta_objects.append(get_pickle_object(meta_dir_path + 'meta' + str(i + 1) + '.pkl'))
-										product_json = meta_objects[i][asin]
-									except:
-										product_json = None
-										pass
-								else:
-									break
+				if prev_meta_file_no != meta_file_no:
+					meta = get_pickle_object(meta_dir_path + 'meta' + meta_file_no + '.pkl')
 				else:
-					product_json = find_product_json(asin, tmp_category_dir, category)
-				#------------------------------------------------------------------------
+					if not same_category_flag:
+						meta = get_pickle_object(meta_dir_path + 'meta' + meta_file_no + '.pkl')
+				prev_meta_file_no = meta_file_no
+				
+				product_json = meta[asin]
+
 				if product_json == None:
 					print('NOT FOUND', '\ncategory: ', category, '\nfile: ', file_path, '\nasin: ', asin)
 				else:
@@ -89,7 +62,9 @@ def synch_data(paths, tmp_category_dir):
 						io.write_line(current_file_pointer, json.dumps(merged_json) + '\n')
 						io.write_line(all_categories_one_file_pointer, json.dumps(merged_json) + '\n')
 						merged_categories_files.append(category)
+				
 				line_no += 1
+				same_category_flag = True
 			except:
 				print('🐛 ERROR:\nFILE_PATH:', file_path, '\nLINE_NO:', line_no, '\nLINE:', line)
 				pass
