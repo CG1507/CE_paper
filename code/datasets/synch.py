@@ -57,10 +57,12 @@ def synch_data(paths, tmp_category_dir):
 						current_file_pointer = io.append_file(tmp_category_dir + category + '/merged.json')
 						io.write_line(current_file_pointer, json.dumps(merged_json) + '\n')
 						io.write_line(all_categories_one_file_pointer, json.dumps(merged_json) + '\n')
+						current_file_pointer.close()
 					else:
-						current_file_pointer = io.append_file(tmp_category_dir + category + '/merged.json')
+						current_file_pointer = io.create_file(tmp_category_dir + category + '/merged.json')
 						io.write_line(current_file_pointer, json.dumps(merged_json) + '\n')
 						io.write_line(all_categories_one_file_pointer, json.dumps(merged_json) + '\n')
+						current_file_pointer.close()
 						merged_categories_files.append(category)
 				
 				line_no += 1
