@@ -64,7 +64,7 @@ def write_meta_chunks(file_pointer, category_names, tmp_category_dir):
 		chunks = {}
 		line_no = 1
 		chunk_no = 1
-		chunk_break = 100000
+		chunk_break = 10
 		try:
 			for line in file_pointer[category]:
 					json_line = json.loads(json.dumps(line))
@@ -77,13 +77,14 @@ def write_meta_chunks(file_pointer, category_names, tmp_category_dir):
 							print(category + ': ' + 'meta'+ str(chunk_no) + ' saved')
 						chunks = {}
 						chunk_no += 1
-						chunk_break += 100000
+						chunk_break += 10
 						
 					line_no += 1
 
-			with open(tmp_category_dir + category  + '/meta_chunks/' + 'meta' + str(chunk_no) +'.pkl', 'wb') as f:
-				pickle.dump(chunks, f)
-				print(category + ': ' + 'meta'+ str(chunk_no) + ' saved')
+			if len(chunks) != 0:
+				with open(tmp_category_dir + category  + '/meta_chunks/' + 'meta' + str(chunk_no) +'.pkl', 'wb') as f:
+					pickle.dump(chunks, f)
+					print(category + ': ' + 'meta'+ str(chunk_no) + ' saved')
 			print('Total number of products in ' + category + ' is ' + str(line_no))
 		except:
 			print('🐛 Error generated in ' + category + ', in meta' + str(chunk_no) + '.pkl at line no: ' + str(line_no))
