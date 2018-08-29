@@ -103,7 +103,7 @@ def convert(timestamp):
 
 def test():
 	"""
-	Test function of unixtime.
+	Test function of unixtime Hours, Minutes, seconds not useful.
 	"""
 	timestamp = "1208217600"
 	date_time = convert(timestamp)
