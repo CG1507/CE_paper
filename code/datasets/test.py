@@ -23,14 +23,14 @@ def analyze_categories(data_folder, category_names):
 		for line in file_pointer:
 			try:
 				json_line = json.loads(json.dumps(line))
-				price = json_line['price']
+				cat = json_line['categories']
+				print(cat)
 			except:
 				not_price[category] += 1
 				line_no[category] += 1
-				print(line)
-				break
 				pass
 			line_no[category] +=1
+		print(category)
 		print(line_no[category])
 		print(not_price[category])
 
