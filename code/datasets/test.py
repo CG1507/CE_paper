@@ -18,13 +18,13 @@ def analyze_categories(data_folder, category_names):
 	not_price = {}
 	line_no = {}
 	for category in category_names:
-		file_pointer = parse(data_folder + category + '/meta.json.gz')
+		file_pointer = parse(data_folder + category + '/reviews.json.gz')
 		not_price[category] = 0
 		line_no[category] = 0
 		for line in file_pointer:
 			try:
 				json_line = json.loads(json.dumps(line))
-				cat = json_line['categories']
+				cat = json_line['reviewerID']
 				print(cat)
 			except:
 				not_price[category] += 1
@@ -41,9 +41,12 @@ def see_data(data_folder, category_names):
 		for line in file_pointer:
 			try:
 				json_line = json.loads(json.dumps(line))
-				keys = len(json_line.keys())
-				print(keys)
+				cat = json_line['title']
+				print(cat)
+				#keys = len(json_line.keys())
+				#print(keys)
 			except:
+				print('skipped')
 				pass
 
 def test():
