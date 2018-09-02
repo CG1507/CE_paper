@@ -73,11 +73,11 @@ def synch_data(paths, tmp_category_dir):
 		print('Path no.', path_no, 'DONE:', file_path)
 		path_no += 1
 
-def get_sorted_files_path(tmp_category_dir):
+def get_sorted_files_path(tmp_category_dir, category_names):
 	total_years = ['1996', '1997', '1998', '1999', '2000', '2001', '2002', '2003', '2004', '2005', '2006', '2007', '2008', '2009', '2010', '2011', '2012', '2013', '2014'] 
 	total_months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
 	total_dates = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31']
-	category_names  = io.list_dirs(tmp_category_dir)
+
 	paths = []
 	
 	category_date_structure ={}
@@ -103,14 +103,15 @@ def get_sorted_files_path(tmp_category_dir):
 								paths.append([tmp_category_dir + category + '/reviews_by_date/' + year + '/' + month + '/' + date + '.json', category])
 	return paths
 
-def write_merged_data(tmp_category_dir):
-	paths = get_sorted_files_path(tmp_category_dir)
+def write_merged_data(tmp_category_dir, category_names):
+	paths = get_sorted_files_path(tmp_category_dir, category_names)
 	print('No. of files:', len(paths))
 	synch_data(paths, tmp_category_dir)
 
 def test():
 	tmp_category_dir = '/media/dell/Seagate Expansion Drive/CE_paper/Implementation/tmp_data/categories/'
-	write_merged_data(tmp_category_dir)
+	category_names = io.list_dirs(tmp_category_dir)
+	write_merged_data(tmp_category_dir, category_names)
 
 if __name__ == "__main__":
 	test()
