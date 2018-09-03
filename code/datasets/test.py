@@ -41,12 +41,12 @@ def see_data(data_folder, category_names):
 		for line in file_pointer:
 			try:
 				json_line = json.loads(json.dumps(line))
-				cat = json_line['title']
+				cat = json_line['categories']
 				print(cat)
 				#keys = len(json_line.keys())
 				#print(keys)
 			except:
-				print('skipped')
+				#print('skipped')
 				pass
 
 def test():
