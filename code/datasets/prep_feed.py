@@ -1,9 +1,18 @@
 import datasets
-from utils import io
+from utils import io, unixtime
 import gzip
 import json
 import pickle
 import synch
+
+def unix_to_attributes(unixReviewTime):
+	date_time = unixtime.convert(unixReviewTime)
+	date = get_date(date_time)
+	month = get_month(date_time)
+	year = get_year(date_time)
+	day = get_day(date_time)
+
+	return int(date), int(month), int(year), int(day)
 
 def get_attributes(json_line):
 	FLAG = True
