@@ -83,3 +83,6 @@ def list_files(folder_address, ends_with = ".txt"):
 def list_dirs(folder_address):
 	
 	return [file for file in os.listdir(folder_address)]
+
+def file_presence(filepath):
+	return os.path.exists(filepath)

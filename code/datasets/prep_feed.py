@@ -5,6 +5,9 @@ import json
 import pickle
 import synch
 
+def get_review_details(tmp_category_dir, category, asin, helpful, reviewText, overall, summary, unixReviewTime, title, price, related, salesRank, brand, categories):
+		
+
 def unix_to_attributes(unixReviewTime):
 	date_time = unixtime.convert(unixReviewTime)
 	date = get_date(date_time)
