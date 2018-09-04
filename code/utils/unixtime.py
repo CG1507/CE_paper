@@ -101,6 +101,12 @@ def convert(timestamp):
 	date_time = datetime.datetime.fromtimestamp(int(timestamp)).strftime('%Y-%m-%d %H:%M:%S')
 	return str(date_time)
 
+def days_difference(date0, date1):
+	d0 = datetime.date(date0[0], date0[1], date0[2])
+	d1 = datetime.date(date1[0], date1[1], date1[2])
+	diff = d1 - d0
+	return diff.days
+
 def test():
 	"""
 	Test function of unixtime.
@@ -115,6 +121,7 @@ def test():
 	print('Hour', get_hour(date_time))
 	print('Minute', get_minute(date_time))
 	print('Seconds', get_second(date_time))
+	print(days_difference([2008, 1, 10], [2009, 1, 10]))
 
 if __name__ == '__main__':
 	test()
