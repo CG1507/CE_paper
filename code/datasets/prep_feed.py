@@ -14,7 +14,9 @@ with open(price_details_path, 'rb') as f:
 global_data = {
 				'last_rank': 0, 
 				'price_scale': price_scale, 
-				'available_products': {}
+				'available_products': {},
+				'available_reviewers': {},
+				'unavailable_products': {}
 			  }
 
 def get_new_rank():
@@ -43,13 +45,24 @@ def get_price_scale(price, category):
 	else:
 		return 2
 
-def get_reviewer_details(tmp_category_dir, category, asin, helpful, reviewText, overall, price, related, salesRank, unixReviewTime, brand, categories):
-	reviewer_filepath = tmp_category_dir + category + '/reviewers/' + asin + '.json'
-	if io.file_presence(reviewer_filepath):
-		reviewer_file_pointer = io.read_file(reviewer_filepath)
+def get_product_json(asin):
+	global global_data
+	reading_product_file_pointer = io.read_file(global_data['available_products'][asin])
+	line = reading_product_file_pointer.readline()
+	product_json = json.loads(line)
+	reading_product_file_pointer.close()
+	return product_json
+
+def get_reviewer_details(tmp_category_dir, category, reviewerID, asin, sentiment, total_reacted, helpfulness, rating, summary, date, month, year, day, title, price, related, salesRank, brand, categories):
+	global global_data
+
+	reviewer_filepath = tmp_category_dir + category + '/reviewers/' + reviewerID + '.json'
+
+	if reviewerID in global_data['available_reviewers']:
+		reading_reviewer_file_pointer = io.read_file(reviewer_filepath)
 	else:
-		reviewer_file_pointer = io.create_file(reviewer_filepath)
-		sentiment, total_reacted, helpfulness, rating = get_review_details(helpful, reviewText, overall)
+		global_data['available_reviewers'][reviewerID] = reviewer_filepath
+		
 		reviewer_json = {}
 		reviewer_json['rank'] = get_new_rank()
 		reviewer_json['#_reviews'] = 1
@@ -58,11 +71,12 @@ def get_reviewer_details(tmp_category_dir, category, asin, helpful, reviewText, 
 		reviewer_json['helpfulness'] = helpfulness
 		reviewer_json['rating'] = rating
 		reviewer_json['price'] = get_price_scale(price, category)
-		date, month, year, day = unix_to_attributes(unixReviewTime)
-		reviewer_json['first_purchase'] = [date, month, year]
+		reviewer_json['first_purchase'] = [year, month, date]
 		reviewer_json['engaged_time'] = 0
 		reviewer_json['reviews'] = {asin: {'#_time': 1, 'category': category, 'subcategory': categories, 'brand': brand}}
+		
 
+		writing_reviewer_file_pointer = io.create_file(reviewer_filepath)
 
 def get_review_details(helpful, reviewText, overall):
 	sentiment = core.get_sentiment(reviewText, on_base = "t", flag_prob=False)
@@ -106,6 +120,7 @@ def repeated_purchase(tmp_category_dir, category, reviewerID, asin):
 	reading_reviewer_file_pointer = io.read_file(tmp_category_dir + category + '/reviewers/' + asin + '.json')
 	line = reading_file_pointer.readline()
 	reviewer_json = json.loads(line)
+	reading_reviewer_file_pointer.close()
 	if 'reviews' in reviewer_json:
 		if asin in reviewer_json['reviews']:
 			return 1
@@ -142,28 +157,47 @@ def get_influential_attributes(available_products):
 		influential_attributes['#_products_related'] += product_json['#_products_related']
 		influential_attributes['buy_again'] += product_json['buy_again']
 		influential_attributes['salerank'] += product_json['salerank']
+		reading_file_pointer.close()
 
 	return influential_attributes
 
-def get_influential_details(related):
+def get_influential_details(related, asin):
 	global global_data
 
 	available_products = []
 	for product in related['also_bought']:
 		if product in global_data['available_products']:
 			available_products.append(product)
+		else:
+			if product in global_data['unavailable_products']:
+				if asin not in global_data['unavailable_products'][product]:
+					global_data['unavailable_products'][product].append(asin)
+			else:
+				global_data['unavailable_products'][product] = [asin]
 	also_bought_influential = get_influential_attributes(available_products)
 
 	available_products = []
 	for product in related['also_viewed']:
 		if product in global_data['available_products']:
 			available_products.append(product)
+		else:
+			if product in global_data['unavailable_products']:
+				if asin not in global_data['unavailable_products'][product]:
+					global_data['unavailable_products'][product].append(asin)
+			else:
+				global_data['unavailable_products'][product] = [asin]
 	also_viewed_influential = get_influential_attributes(available_products)
 
 	available_products = []
 	for product in related['bought_together']:
 		if product in global_data['available_products']:
 			available_products.append(product)
+		else:
+			if product in global_data['unavailable_products']:
+				if asin not in global_data['unavailable_products'][product]:
+					global_data['unavailable_products'][product].append(asin)
+			else:
+				global_data['unavailable_products'][product] = [asin]
 	bought_together_influential = get_influential_attributes(available_products)
 
 	return also_bought_influential, also_viewed_influential, bought_together_influential
@@ -171,6 +205,24 @@ def get_influential_details(related):
 def create_dir(directory):
 	if not os.path.exists(directory):
 		os.makedirs(directory)
+
+def update_no_products_related(product):
+	global global_data
+	product_json = get_product_json(product)
+	related = product_json['related']
+	product_json['#_products_related'] = no_products_related(related)
+	writing_product_file_pointer = io.create_file(global_data['available_products'][product])
+	io.write_line(writing_product_file_pointer, json.dumps(product_json))
+	writing_product_file_pointer.close()
+
+def update_influential_details(product):
+	global global_data
+	product_json = get_product_json(product)
+	related = product_json['related']
+	product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential'] = get_influential_details(related, product)
+	writing_product_file_pointer = io.create_file(global_data['available_products'][product])
+	io.write_line(writing_product_file_pointer, json.dumps(product_json))
+	writing_product_file_pointer.close()
 
 def get_product_details(tmp_category_dir, category, reviewerID, asin, sentiment, total_reacted, helpfulness, rating, summary, date, month, year, day, title, price, related, salesRank, brand, categories):
 	global global_data
@@ -198,7 +250,7 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, sentiment,
 		product_json['buy_again'] += repeated_purchase(tmp_category_dir, category, reviewerID, asin)
 		product_json['salerank'] = salesRank
 		product_json['all_categories'] = categories
-		product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential'] = get_influential_details(related)
+		product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential'] = get_influential_details(related, asin)
 
 		writing_product_file_pointer = io.create_file(file_path)
 		io.write_line(writing_product_file_pointer, json.dumps(product_json))
@@ -216,15 +268,24 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, sentiment,
 		product_json['price'] = get_price_scale(price, category)
 		product_json['first_purchase'] = [year, month, date]
 		product_json['engaged_time'] = 0
+		product_json['related'] = related
 		product_json['#_products_related'] = no_products_related(related)
 		product_json['salerank'] = salesRank
 		product_json['buy_again'] = 0
 		product_json['all_categories'] = categories
-		product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential'] = get_influential_details(related)
+		product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential'] = get_influential_details(related, asin)
 
 		writing_product_file_pointer = io.create_file(file_path)
 		io.write_line(writing_product_file_pointer, json.dumps(product_json))
 		writing_product_file_pointer.close()
+
+	if asin in global_data['unavailable_products']:
+		update_needed_asin = global_data['unavailable_products'][asin]
+		for product in update_needed_asin:
+			update_no_products_related(product)
+			update_influential_details(product)
+	del global_data['unavailable_products'][asin]
+
 
 def get_attributes(json_line):
 	FLAG = True
@@ -332,6 +393,7 @@ def synch_data(paths, tmp_category_dir):
 		if prev_category != category:
 			index_file_pointer = open(meta_dir_path + 'index.pkl', 'rb')
 			index = pickle.load(index_file_pointer)
+			index_file_pointer.close()
 			same_category_flag = False
 		prev_category = category
 
@@ -368,6 +430,8 @@ def synch_data(paths, tmp_category_dir):
 			except:
 				print('🐛 ERROR:\nFILE_PATH:', file_path, '\nLINE_NO:', line_no, '\nLINE:', line)
 				pass
+		
+		reading_file_pointer.close()
 		print('Path no.', path_no, 'DONE:', file_path)
 		path_no += 1
 
