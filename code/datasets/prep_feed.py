@@ -82,10 +82,34 @@ def unix_to_attributes(unixReviewTime):
 
 def no_products_related(related):
 	no_products = {}
-	no_products["also_bought"] = len(related["also_bought"])
-	no_products["also_viewed"] = len(related["also_viewed"])
-	no_products["bought_together"] = len(related["bought_together"])
+	
+	count = 0 
+	for product in related["also_bought"]:
+		if product in global_data['available_products']:
+			count += 1
+	no_products["also_bought"] = count
+			
+	count = 0 
+	for product in related["also_viewed"]:
+		if product in global_data['available_products']:
+			count += 1
+	no_products["also_viewed"] = count
+	
+	count = 0
+	for product in related["bought_together"]:
+		if product in global_data['available_products']:
+			count += 1
+	no_products["bought_together"] = count
 	return no_products
+
+def repeated_purchase(tmp_category_dir, category, reviewerID, asin):
+	reading_reviewer_file_pointer = io.read_file(tmp_category_dir + category + '/reviewers/' + asin + '.json')
+	line = reading_file_pointer.readline()
+	reviewer_json = json.loads(line)
+	if 'reviews' in reviewer_json:
+		if asin in reviewer_json['reviews']:
+			return 1
+	return 0
 
 def get_influential_attributes(available_products):
 	global global_data
@@ -121,7 +145,7 @@ def get_influential_attributes(available_products):
 
 	return influential_attributes
 
-def influential_details(related):
+def get_influential_details(related):
 	global global_data
 
 	available_products = []
@@ -148,24 +172,7 @@ def create_dir(directory):
 	if not os.path.exists(directory):
 		os.makedirs(directory)
 
-def get_product_details(tmp_category_dir, category, asin, sentiment, total_reacted, helpfulness, rating, summary, unixReviewTime, title, price, related, salesRank, brand, categories):
-	"""
-	'# of reviews' : 2
-	'# of +ve reviews' : 1
-	'# of -ve reviews' : 1
-	'Total of helpfulness people reacted' : 5
-	'# of helpfulness' : 2
-	'Overall ratings' : 5
-	'price' : 0
-	'# of times same person buy' : 2
-	'first time buy @' : 20/9/2000
-	'selling time' : current date - 'first time buy @'
-	'# product in related' : 20
-	'salerank' : 1212
-	'all_categories': [[]]
-	'buy_again': 0
-	[influentail details]
-	"""
+def get_product_details(tmp_category_dir, category, reviewerID, asin, sentiment, total_reacted, helpfulness, rating, summary, date, month, year, day, title, price, related, salesRank, brand, categories):
 	global global_data
 
 	file_path_dir = tmp_category_dir + category + '/products/' + '/'.join(categories[0]) + '/'
@@ -177,6 +184,7 @@ def get_product_details(tmp_category_dir, category, asin, sentiment, total_react
 		reading_file_pointer = io.read_file(file_path)
 		line = reading_file_pointer.readline()
 		product_json = json.loads(line)
+		reading_file_pointer.close()
 
 		product_json['#_reviews'] += 1
 		pos_senti, neg_senti = get_sentiment_scale(sentiment)
@@ -185,15 +193,16 @@ def get_product_details(tmp_category_dir, category, asin, sentiment, total_react
 		product_json['total_reacted'] += total_reacted
 		product_json['helpfulness'] += helpfulness
 		product_json['rating'] += rating
-		date, month, year, day = unix_to_attributes(unixReviewTime)
-		#product_json['first_purchase'] = [year, month, date]
 		product_json['engaged_time'] = unixtime.days_difference(product_json['first_purchase'], [year, month, date])
 		product_json['#_products_related'] = no_products_related(related)
+		product_json['buy_again'] += repeated_purchase(tmp_category_dir, category, reviewerID, asin)
 		product_json['salerank'] = salesRank
-		product_json['buy_again'] = 0
 		product_json['all_categories'] = categories
-		product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential'] = influential_details(related)
+		product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential'] = get_influential_details(related)
 
+		writing_product_file_pointer = io.create_file(file_path)
+		io.write_line(writing_product_file_pointer, json.dumps(product_json))
+		writing_product_file_pointer.close()
 
 	else:
 		global_data['available_products'][asin] = file_path
@@ -205,20 +214,26 @@ def get_product_details(tmp_category_dir, category, asin, sentiment, total_react
 		product_json['helpfulness'] = helpfulness
 		product_json['rating'] = rating
 		product_json['price'] = get_price_scale(price, category)
-		date, month, year, day = unix_to_attributes(unixReviewTime)
-		product_json['first_purchase'] = [date, month, year]
+		product_json['first_purchase'] = [year, month, date]
 		product_json['engaged_time'] = 0
 		product_json['#_products_related'] = no_products_related(related)
 		product_json['salerank'] = salesRank
 		product_json['buy_again'] = 0
 		product_json['all_categories'] = categories
-		product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential'] = influential_details(related)
+		product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential'] = get_influential_details(related)
 
 		writing_product_file_pointer = io.create_file(file_path)
 		io.write_line(writing_product_file_pointer, json.dumps(product_json))
+		writing_product_file_pointer.close()
 
 def get_attributes(json_line):
 	FLAG = True
+
+	if 'reviewerID' in json_line:
+		reviewerID = json_line['reviewerID']
+	else:
+		FLAG = False
+		reviewerID = ''
 
 	if 'asin' in json_line:
 		asin = json_line['asin']
@@ -296,7 +311,7 @@ def get_attributes(json_line):
 		FLAG = False
 		categories = [[]]
 
-	return FLAG, asin, helpful, reviewText, overall, summary, unixReviewTime, title, price, related, salesRank, brand, categories
+	return FLAG, reviewerID, asin, helpful, reviewText, overall, summary, unixReviewTime, title, price, related, salesRank, brand, categories
 
 def get_pickle_object(file_path):
 	with open(file_path, 'rb') as f:
@@ -340,10 +355,11 @@ def synch_data(paths, tmp_category_dir):
 				
 				product_json = meta[asin]
 				merged_json = dict(json_line, **product_json)
-				FLAG, asin, helpful, reviewText, overall, summary, unixReviewTime, title, price, related, salesRank, brand, categories = get_attributes(merged_json)
+				FLAG, reviewerID, asin, helpful, reviewText, overall, summary, unixReviewTime, title, price, related, salesRank, brand, categories = get_attributes(merged_json)
 				
 				if FLAG:
 					sentiment, total_reacted, helpfulness, rating = get_review_details(helpful, reviewText, overall)
+					date, month, year, day = unix_to_attributes(unixReviewTime)
 				else:
 					print('Till now reject')
 
@@ -355,14 +371,14 @@ def synch_data(paths, tmp_category_dir):
 		print('Path no.', path_no, 'DONE:', file_path)
 		path_no += 1
 
-def create_dirs(tmp_category_dir, category_names):
+def create_category_dirs(tmp_category_dir, category_names):
 	for category in category_names:
 		io.make_dir(['reviewers', 'products'], tmp_category_dir + category + '/')
 
 def write_feed_data(tmp_category_dir, category_names):
 	paths = synch.get_sorted_files_path(tmp_category_dir, category_names)
 	print('Total number of files:', len(paths))
-	create_dirs(tmp_category_dir, category_names)
+	create_category_dirs(tmp_category_dir, category_names)
 	synch_data(paths, tmp_category_dir)
 
 def test():
