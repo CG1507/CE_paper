@@ -95,27 +95,29 @@ def get_influential_attributes(available_products):
 	influential_attributes['#_-ve_reviews'] = 0
 	influential_attributes['total_reacted'] = 0
 	influential_attributes['helpfulness'] = 0
-	influential_attributes['rating'] = json_line0
+	influential_attributes['rating'] = 0
 	influential_attributes['price'] = 0
 	influential_attributes['engaged_time'] = 0
 	influential_attributes['#_products_related'] = 0
 	influential_attributes['salerank'] = 0
+	influential_attributes['buy_again'] = 0
 
 	for product in available_products:
 		reading_file_pointer = io.read_file(global_data['available_products'][product])
 		line = reading_file_pointer.readline()
-		json_line = json.loads(line)
+		product_json = json.loads(line)
 
-		influential_attributes['#_reviews'] += json_line['#_reviews']
-		influential_attributes['#_+ve_reviews'] += json_line['#_+ve_reviews']
-		influential_attributes['#_-ve_reviews'] += json_line['#_-ve_reviews']
-		influential_attributes['total_reacted'] += json_line['total_reacted']
-		influential_attributes['helpfulness'] += json_line['helpfulness']
-		influential_attributes['rating'] += json_line['rating']
-		influential_attributes['price'] += json_line['price']
-		influential_attributes['engaged_time'] += json_line['engaged_time']
-		influential_attributes['#_products_related'] += json_line['#_products_related']
-		influential_attributes['salerank'] += json_line['salerank']
+		influential_attributes['#_reviews'] += product_json['#_reviews']
+		influential_attributes['#_+ve_reviews'] += product_json['#_+ve_reviews']
+		influential_attributes['#_-ve_reviews'] += product_json['#_-ve_reviews']
+		influential_attributes['total_reacted'] += product_json['total_reacted']
+		influential_attributes['helpfulness'] += product_json['helpfulness']
+		influential_attributes['rating'] += product_json['rating']
+		influential_attributes['price'] += product_json['price']
+		influential_attributes['engaged_time'] += product_json['engaged_time']
+		influential_attributes['#_products_related'] += product_json['#_products_related']
+		influential_attributes['buy_again'] += product_json['buy_again']
+		influential_attributes['salerank'] += product_json['salerank']
 
 	return influential_attributes
 
@@ -124,19 +126,23 @@ def influential_details(related):
 
 	available_products = []
 	for product in related['also_bought']:
-		if product in global_data['available_products'].keys():
+		if product in global_data['available_products']:
 			available_products.append(product)
+	also_bought_influential = get_influential_attributes(available_products)
 
 	available_products = []
 	for product in related['also_viewed']:
-		if product in global_data['available_products'].keys():
+		if product in global_data['available_products']:
 			available_products.append(product)
-
+	also_viewed_influential = get_influential_attributes(available_products)
 
 	available_products = []
 	for product in related['bought_together']:
-		if product in global_data['available_products'].keys():
+		if product in global_data['available_products']:
 			available_products.append(product)
+	bought_together_influential = get_influential_attributes(available_products)
+
+	return also_bought_influential, also_viewed_influential, bought_together_influential
 
 def create_dir(directory):
 	if not os.path.exists(directory):
@@ -157,6 +163,7 @@ def get_product_details(tmp_category_dir, category, asin, sentiment, total_react
 	'# product in related' : 20
 	'salerank' : 1212
 	'all_categories': [[]]
+	'buy_again': 0
 	[influentail details]
 	"""
 	global global_data
@@ -166,12 +173,31 @@ def get_product_details(tmp_category_dir, category, asin, sentiment, total_react
 	
 	file_path = file_path_dir + asin + '.json'
 
-	if asin not in global_data['available_products']:
-		global_data['available_products'][asin] = file_path
+	if asin in global_data['available_products']:
+		reading_file_pointer = io.read_file(file_path)
+		line = reading_file_pointer.readline()
+		product_json = json.loads(line)
 
-	if io.file_presence(file_path):
+		product_json['#_reviews'] += 1
+		pos_senti, neg_senti = get_sentiment_scale(sentiment)
+		product_json['#_+ve_reviews'] += pos_senti
+		product_json['#_-ve_reviews'] += neg_senti
+		product_json['total_reacted'] += total_reacted
+		product_json['helpfulness'] += helpfulness
+		product_json['rating'] += rating
+		date, month, year, day = unix_to_attributes(unixReviewTime)
+		#product_json['first_purchase'] = [year, month, date]
+		product_json['engaged_time'] = unixtime.days_difference(product_json['first_purchase'], [year, month, date])
+		product_json['#_products_related'] = no_products_related(related)
+		product_json['salerank'] = salesRank
+		product_json['buy_again'] = 0
+		product_json['all_categories'] = categories
+		product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential'] = influential_details(related)
+
 
 	else:
+		global_data['available_products'][asin] = file_path
+	
 		product_json = {}
 		product_json['#_reviews'] = 1
 		product_json['#_+ve_reviews'], product_json['#_-ve_reviews'] = get_sentiment_scale(sentiment)
@@ -184,7 +210,12 @@ def get_product_details(tmp_category_dir, category, asin, sentiment, total_react
 		product_json['engaged_time'] = 0
 		product_json['#_products_related'] = no_products_related(related)
 		product_json['salerank'] = salesRank
+		product_json['buy_again'] = 0
 		product_json['all_categories'] = categories
+		product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential'] = influential_details(related)
+
+		writing_product_file_pointer = io.create_file(file_path)
+		io.write_line(writing_product_file_pointer, json.dumps(product_json))
 
 def get_attributes(json_line):
 	FLAG = True
@@ -312,8 +343,7 @@ def synch_data(paths, tmp_category_dir):
 				FLAG, asin, helpful, reviewText, overall, summary, unixReviewTime, title, price, related, salesRank, brand, categories = get_attributes(merged_json)
 				
 				if FLAG:
-					print('Accept')
-					#get csv line
+					sentiment, total_reacted, helpfulness, rating = get_review_details(helpful, reviewText, overall)
 				else:
 					print('Till now reject')
 
