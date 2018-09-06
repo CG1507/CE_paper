@@ -39,11 +39,11 @@ def get_price_scale(price, category):
 	h_min = global_data['price_scale'][category]['high']['min']
 	h_max = global_data['price_scale'][category]['high']['max']
 	if price >= l_min and price <= l_max:
-		return 0
-	elif price >= m_min and price <= m_max:
 		return 1
-	else:
+	elif price >= m_min and price <= m_max:
 		return 2
+	else:
+		return 3
 
 def get_product_json(asin):
 	global global_data
@@ -147,7 +147,6 @@ def get_reviewer_details(tmp_category_dir, category, reviewerID, asin, sentiment
 		reading_reviewer_file_pointer.close()
 		reviewer_json = json.loads(line)
 
-		reviewer_json['rank'] = #update_reviewer_rank()
 		reviewer_json['#_reviews'] += 1
 		pos_senti, neg_senti = get_sentiment_scale(sentiment)
 		reviewer_json['#_+ve_reviews'] += pos_senti
@@ -171,7 +170,6 @@ def get_reviewer_details(tmp_category_dir, category, reviewerID, asin, sentiment
 		global_data['available_reviewers'][reviewerID] = reviewer_filepath
 		
 		reviewer_json = {}
-		reviewer_json['rank'] = get_new_rank()
 		reviewer_json['#_reviews'] = 1
 		reviewer_json['#_+ve_reviews'], reviewer_json['#_-ve_reviews'] = get_sentiment_scale(sentiment)
 		reviewer_json['total_reacted'] = total_reacted
