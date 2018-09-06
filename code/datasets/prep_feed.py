@@ -12,17 +12,11 @@ with open(price_details_path, 'rb') as f:
 	price_scale = pickle.load(f)
 
 global_data = {
-				'last_rank': 0, 
 				'price_scale': price_scale, 
 				'available_products': {},
 				'available_reviewers': {},
 				'unavailable_products': {}
 			  }
-
-def get_new_rank():
-	global global_data
-	global_data['last_rank'] += 1
-	return global_data['last_rank']
 
 def get_sentiment_scale(sentiment):
 	if sentiment >= 0:
