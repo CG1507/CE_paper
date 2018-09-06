@@ -50,17 +50,16 @@ def get_product_json(asin):
 	reading_product_file_pointer.close()
 	return product_json
 
-def reviewers_no_products_related(products):
+def r_b_s_c_no_products_related(asin, also_bought, also_viewed, bought_together):
 	reviewers_no_related = {}
-	reviewers_no_related['also_bought'] = 0
-	reviewers_no_related['also_viewed'] = 0
-	reviewers_no_related['bought_together'] = 0
+	reviewers_no_related['also_bought'] = also_bought
+	reviewers_no_related['also_viewed'] = also_viewed
+	reviewers_no_related['bought_together'] = bought_together
 
-	for product in products:
-		product_json = get_product_json(product)
-		reviewers_no_related['also_bought'] += product_json['#_products_related']['also_bought']
-		reviewers_no_related['also_viewed'] += product_json['#_products_related']['also_viewed']
-		reviewers_no_related['bought_together'] += product_json['#_products_related']['bought_together']
+	product_json = get_product_json(asin)
+	reviewers_no_related['also_bought'] += product_json['#_products_related']['also_bought']
+	reviewers_no_related['also_viewed'] += product_json['#_products_related']['also_viewed']
+	reviewers_no_related['bought_together'] += product_json['#_products_related']['bought_together']
 	return reviewers_no_related
 
 def add_review_to_reviewer(reviewer_json, asin, category, categories, brand):
@@ -144,7 +143,7 @@ def get_reviewer_details(tmp_category_dir, category, reviewerID, asin, sentiment
 			reviewer_json['also_bought_influential'], reviewer_json['also_viewed_influential'], reviewer_json['bought_together_influential'] = get_r_b_s_c_influential_details(asin, reviewer_json['also_bought_influential'], reviewer_json['also_viewed_influential'], reviewer_json['bought_together_influential'])
 		reviewer_json['buy_again'] += buy_again_value
 		reviewer_json['reviews'] = add_review_to_reviewer(reviewer_json, asin, category, categories, brand)
-		reviewer_json['#_products_related'] = reviewers_no_products_related(reviewer_json['reviews'].keys())
+		reviewer_json['#_products_related'] = r_b_s_c_no_products_related(asin, reviewer_json['#_products_related']['also_bought'], reviewer_json['#_products_related']['also_viewed'], reviewer_json['#_products_related']['bought_together'])
 		reviewer_json['fav_category'], reviewer_json['fav_subcategory'], reviewer_json['fav_brand'] = get_favourite(reviewer_json)
 	
 		writing_reviewer_file_pointer = io.create_file(reviewer_filepath)
@@ -200,7 +199,7 @@ def get_brand_details(tmp_category_dir, category, reviewerID, asin, sentiment, t
 			brand_json['#_products'] += 1
 			brand_json['products'].append([asin])
 			brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential'] = get_r_b_s_c_influential_details(asin, brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential'])
-		brand_json['#_products_related'] = reviewers_no_products_related(brand_json['reviews'].keys())
+			brand_json['#_products_related'] = r_b_s_c_no_products_related(asin, brand_json['#_products_related']['also_bought'], brand_json['#_products_related']['also_viewed']. brand_json['#_products_related']['bought_together'])
 		
 		writing_brand_file_pointer = io.create_file(brand_filepath)
 		io.write_line(writing_brand_file_pointer, json.dumps(brand_json))
@@ -228,6 +227,58 @@ def get_brand_details(tmp_category_dir, category, reviewerID, asin, sentiment, t
 		io.write_line(writing_brand_file_pointer, json.dumps(brand_json))
 		writing_brand_file_pointer.close()
 
+def get_subcategory_details(tmp_category_dir, category, reviewerID, asin, sentiment, total_reacted, helpfulness, rating, summary, date, month, year, day, title, price, related, salesRank, brand, categories):
+	global global_data
+
+	subcategory = '_'.join(categories[0][1:])
+	subcategory_filepath = tmp_category_dir + category + '/subcategories/' + subcategory + '.json'
+
+	if subcategory in global_data['available_subcategories']:
+		reading_subcategory_file_pointer = io.read_file(subcategory_filepath)
+		line = reading_subcategory_file_pointer.readline()
+		reading_subcategory_file_pointer.close()
+		subcategory_json = json.loads(line)
+
+		subcategory_json['#_reviews'] += 1
+		pos_senti, neg_senti = get_sentiment_scale(sentiment)
+		subcategory_json['#_+ve_reviews'] += pos_senti
+		subcategory_json['#_-ve_reviews'] += neg_senti
+		subcategory_json['total_reacted'] += total_reacted
+		subcategory_json['helpfulness'] += helpfulness
+		subcategory_json['rating'] += rating
+		subcategory_json['price'] += get_price_scale(price, category)
+		subcategory_json['engaged_time'] = unixtime.days_difference(subcategory_json['first_purchase'], [year, month, date])
+		if asin not in subcategory_json['products']:
+			subcategory_json['#_products'] += 1
+			subcategory_json['products'].append([asin])
+			subcategory_json['also_bought_influential'], subcategory_json['also_viewed_influential'], subcategory_json['bought_together_influential'] = get_r_b_s_c_influential_details(asin, subcategory_json['also_bought_influential'], subcategory_json['also_viewed_influential'], subcategory_json['bought_together_influential'])
+			subcategory_json['#_products_related'] = r_b_s_c_no_products_related(asin, subcategory_json['#_products_related']['also_bought'], subcategory_json['#_products_related']['also_viewed']. subcategory_json['#_products_related']['bought_together'])
+		
+		writing_subcategory_file_pointer = io.create_file(subcategory_filepath)
+		io.write_line(writing_subcategory_file_pointer, json.dumps(subcategory_json))
+		writing_subcategory_file_pointer.close()
+
+	else:
+		global_data['available_subcategories'][subcategory] = subcategory_filepath
+		
+		product_json = get_product_json(asin)
+		subcategory_json = {}
+		subcategory_json['#_reviews'] = 1
+		subcategory_json['#_products'] = 1
+		subcategory_json['#_+ve_reviews'], subcategory_json['#_-ve_reviews'] = get_sentiment_scale(sentiment)
+		subcategory_json['total_reacted'] = total_reacted
+		subcategory_json['helpfulness'] = helpfulness
+		subcategory_json['rating'] = rating
+		subcategory_json['price'] = get_price_scale(price, category)
+		subcategory_json['first_purchase'] = [year, month, date]
+		subcategory_json['engaged_time'] = 0
+		subcategory_json['products'] = [asin]
+		subcategory_json['#_products_related'] = no_products_related(related)
+		subcategory_json['also_bought_influential'], subcategory_json['also_viewed_influential'], subcategory_json['bought_together_influential'] = product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential']
+		
+		writing_category_file_pointer = io.create_file(category_filepath)
+		io.write_line(writing_category_file_pointer, json.dumps(subcategory_json))
+		writing_category_file_pointer.close()
 
 def get_review_details(helpful, reviewText, overall):
 	sentiment = core.get_sentiment(reviewText, on_base = "t", flag_prob=False)
