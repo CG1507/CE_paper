@@ -311,12 +311,12 @@ def get_category_details(tmp_category_dir, category, reviewerID, asin, sentiment
 			category_json['also_bought_influential'], category_json['also_viewed_influential'], category_json['bought_together_influential'] = get_r_b_s_c_influential_details(asin, category_json['also_bought_influential'], category_json['also_viewed_influential'], category_json['bought_together_influential'])
 			category_json['#_products_related'] = r_b_s_c_no_products_related(asin, category_json['#_products_related']['also_bought'], category_json['#_products_related']['also_viewed']. category_json['#_products_related']['bought_together'])
 		
-		writing_subcategory_file_pointer = io.create_file(subcategory_filepath)
-		io.write_line(writing_subcategory_file_pointer, json.dumps(category_json))
-		writing_subcategory_file_pointer.close()
+		writing_category_file_pointer = io.create_file(category_filepath)
+		io.write_line(writing_category_file_pointer, json.dumps(category_json))
+		writing_category_file_pointer.close()
 
 	else:
-		global_data['available_subcategories'][subcategory] = [brand]
+		global_data['available_subcategories'][category] = [subcategory]
 		
 		product_json = get_product_json(asin)
 		category_json = {}
@@ -333,9 +333,9 @@ def get_category_details(tmp_category_dir, category, reviewerID, asin, sentiment
 		category_json['#_products_related'] = no_products_related(related)
 		category_json['also_bought_influential'], category_json['also_viewed_influential'], category_json['bought_together_influential'] = product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential']
 
-		writing_subcategory_file_pointer = io.create_file(subcategory_filepath)
-		io.write_line(writing_subcategory_file_pointer, json.dumps(category_json))
-		writing_subcategory_file_pointer.close()
+		writing_category_file_pointer = io.create_file(category_filepath)
+		io.write_line(writing_category_file_pointer, json.dumps(category_json))
+		writing_category_file_pointer.close()
 
 def get_review_details(helpful, reviewText, overall):
 	sentiment = core.get_sentiment(reviewText, on_base = "t", flag_prob=False)
