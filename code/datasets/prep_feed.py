@@ -13,9 +13,9 @@ with open(price_details_path, 'rb') as f:
 
 global_data = {
 				'price_scale': price_scale, 
-				'available_products': {},
 				'available_reviewers': {},
 				'unavailable_products': {},
+				'available_products': {},
 				'available_brands': {},
 				'available_subcategories': {},
 				'available_categories': {}
@@ -49,6 +49,44 @@ def get_product_json(asin):
 	product_json = json.loads(line)
 	reading_product_file_pointer.close()
 	return product_json
+
+def get_brand_json(brand):
+	global global_data
+	reading_brand_file_pointer = io.read_file(global_data['available_brands'][brand])
+	line = reading_brand_file_pointer.readline()
+	brand_json = json.loads(line)
+	reading_brand_file_pointer.close()
+	return brand_json
+
+def get_subcategory_json(tmp_category_dir, category, subcategory):
+	global global_data
+	subcategory_filepath = tmp_category_dir + category + '/subcategories/' + subcategory + '.json'
+	reading_subcategory_file_pointer = io.read_file(subcategory_filepath)
+	line = reading_subcategory_file_pointer.readline()
+	subcategory_json = json.loads(line)
+	reading_subcategory_file_pointer.close()
+	return subcategory_json
+
+def get_category_json(tmp_category_dir, category):
+	global global_data
+	category_filepath = tmp_category_dir + category + '/categories/' + category + '.json'
+	reading_category_file_pointer = io.read_file(category_filepath)
+	line = reading_category_file_pointer.readline()
+	category_json = json.loads(line)
+	reading_category_file_pointer.close()
+	return category_json
+
+def prepare_r_b_s_c_no_products_related(asin, also_bought, also_viewed, bought_together):
+	reviewers_no_related = {}
+	reviewers_no_related['also_bought'] = also_bought
+	reviewers_no_related['also_viewed'] = also_viewed
+	reviewers_no_related['bought_together'] = bought_together
+
+	product_json = get_product_json(asin)
+	reviewers_no_related['also_bought'] -= product_json['#_products_related']['also_bought']
+	reviewers_no_related['also_viewed'] -= product_json['#_products_related']['also_viewed']
+	reviewers_no_related['bought_together'] -= product_json['#_products_related']['bought_together']
+	return reviewers_no_related
 
 def r_b_s_c_no_products_related(asin, also_bought, also_viewed, bought_together):
 	reviewers_no_related = {}
@@ -94,6 +132,29 @@ def get_favourite(reviewer_json):
 		brand[reviewer_json['reviews'][product]['brand']] += reviewer_json['reviews'][product]['#_time']
 
 	return sorted(category, key=category.get, reverse=True)[0], sorted(subcategory, key=subcategory.get, reverse=True)[0], sorted(brand, key=brand.get, reverse=True)[0]
+
+def prepare_r_b_s_c_influential_details(asin, also_bought, also_viewed, bought_together):
+	influential_attributes = {}
+	influential_attributes['also_bought'] = also_bought
+	influential_attributes['also_viewed'] = also_viewed
+	influential_attributes['bought_together'] = bought_together
+
+	product_json = get_product_json(asin)
+	mapping = {'also_bought': product_json['also_bought_influential'], 'also_viewed': product_json['also_viewed_influential'], 'bought_together': product_json['bought_together_influential']}
+	for i in mapping:
+		influential_attributes[i]['#_reviews'] -= mapping[i]['#_reviews']
+		influential_attributes[i]['#_+ve_reviews'] -= mapping[i]['#_+ve_reviews']
+		influential_attributes[i]['#_-ve_reviews'] -= mapping[i]['#_-ve_reviews']
+		influential_attributes[i]['total_reacted'] -= mapping[i]['total_reacted']
+		influential_attributes[i]['helpfulness'] -= mapping[i]['helpfulness']
+		influential_attributes[i]['rating'] -= mapping[i]['rating']
+		influential_attributes[i]['price'] -= mapping[i]['price']
+		influential_attributes[i]['engaged_time'] -= mapping[i]['engaged_time']
+		influential_attributes[i]['#_products_related'] -= mapping[i]['#_products_related']
+		influential_attributes[i]['salerank'] -= mapping[i]['salerank']
+		influential_attributes[i]['buy_again'] -= mapping[i]['buy_again']
+
+	return influential_attributes['also_bought'], influential_attributes['also_viewed'], influential_attributes['bought_together']
 
 def get_r_b_s_c_influential_details(asin, also_bought, also_viewed, bought_together):
 	influential_attributes = {}
@@ -420,7 +481,7 @@ def get_influential_attributes(available_products):
 
 	return influential_attributes
 
-def get_influential_details(related, asin):
+def get_influential_details(related, asin, brand, subcategory, category):
 	global global_data
 
 	available_products = []
@@ -428,11 +489,12 @@ def get_influential_details(related, asin):
 		if product in global_data['available_products']:
 			available_products.append(product)
 		else:
+			pbsc = [asin, brand, subcategory, category]
 			if product in global_data['unavailable_products']:
-				if asin not in global_data['unavailable_products'][product]:
-					global_data['unavailable_products'][product].append(asin)
+				if pbsc not in global_data['unavailable_products'][product]:
+					global_data['unavailable_products'][product].append(pbsc)
 			else:
-				global_data['unavailable_products'][product] = [asin]
+				global_data['unavailable_products'][product] = [pbsc]			
 	also_bought_influential = get_influential_attributes(available_products)
 
 	available_products = []
@@ -440,11 +502,12 @@ def get_influential_details(related, asin):
 		if product in global_data['available_products']:
 			available_products.append(product)
 		else:
+			pbsc = [asin, brand, subcategory, category]
 			if product in global_data['unavailable_products']:
-				if asin not in global_data['unavailable_products'][product]:
-					global_data['unavailable_products'][product].append(asin)
+				if pbsc not in global_data['unavailable_products'][product]:
+					global_data['unavailable_products'][product].append(pbsc)
 			else:
-				global_data['unavailable_products'][product] = [asin]
+				global_data['unavailable_products'][product] = [pbsc]
 	also_viewed_influential = get_influential_attributes(available_products)
 
 	available_products = []
@@ -452,11 +515,12 @@ def get_influential_details(related, asin):
 		if product in global_data['available_products']:
 			available_products.append(product)
 		else:
+			pbsc = [asin, brand, subcategory, category]
 			if product in global_data['unavailable_products']:
-				if asin not in global_data['unavailable_products'][product]:
-					global_data['unavailable_products'][product].append(asin)
+				if pbsc not in global_data['unavailable_products'][product]:
+					global_data['unavailable_products'][product].append(pbsc)
 			else:
-				global_data['unavailable_products'][product] = [asin]
+				global_data['unavailable_products'][product] = [pbsc]
 	bought_together_influential = get_influential_attributes(available_products)
 
 	return also_bought_influential, also_viewed_influential, bought_together_influential
@@ -474,11 +538,11 @@ def update_no_products_related(product):
 	io.write_line(writing_product_file_pointer, json.dumps(product_json))
 	writing_product_file_pointer.close()
 
-def update_influential_details(product):
+def update_influential_details(product, brand, subcategory, category):
 	global global_data
 	product_json = get_product_json(product)
 	related = product_json['related']
-	product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential'] = get_influential_details(related, product)
+	product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential'] = get_influential_details(related, product, brand, subcategory, category)
 	writing_product_file_pointer = io.create_file(global_data['available_products'][product])
 	io.write_line(writing_product_file_pointer, json.dumps(product_json))
 	writing_product_file_pointer.close()
@@ -486,6 +550,7 @@ def update_influential_details(product):
 def get_product_details(tmp_category_dir, category, reviewerID, asin, sentiment, total_reacted, helpfulness, rating, summary, date, month, year, day, title, price, related, salesRank, brand, categories):
 	global global_data
 
+	subcategory = '_'.join(categories[0][1:])
 	file_path_dir = tmp_category_dir + category + '/products/' + '/'.join(categories[0]) + '/'
 	create_dir(file_path_dir)
 	
@@ -511,7 +576,7 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, sentiment,
 		product_json['salerank'] = salesRank
 		product_json['all_categories'] = categories
 		#Think about wheather its required or not
-		product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential'] = get_influential_details(related, asin)
+		product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential'] = get_influential_details(related, asin, brand, subcategory, category)
 
 		writing_product_file_pointer = io.create_file(file_path)
 		io.write_line(writing_product_file_pointer, json.dumps(product_json))
@@ -534,18 +599,31 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, sentiment,
 		product_json['salerank'] = salesRank
 		product_json['buy_again'] = 0
 		product_json['all_categories'] = categories
-		product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential'] = get_influential_details(related, asin)
+		product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential'] = get_influential_details(related, asin, brand, subcategory, category)
 
 		writing_product_file_pointer = io.create_file(file_path)
 		io.write_line(writing_product_file_pointer, json.dumps(product_json))
 		writing_product_file_pointer.close()
 
 	if asin in global_data['unavailable_products']:
-		update_needed_asin = global_data['unavailable_products'][asin]
-		for product in update_needed_asin:
-			update_no_products_related(product)
-			update_influential_details(product)
-	del global_data['unavailable_products'][asin]
+		update_needed = global_data['unavailable_products'][asin]
+		
+		for pbsc in update_needed:
+			product_json = get_product_json(pbsc[0])
+			also_bought_influential, also_viewed_influential, bought_together_influential = product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential']
+			no_products_related = product_json['#_products_related']
+
+			brand_json = get_brand_json(pbsc[1])
+			subcategory_json = get_subcategory_json(tmp_category_dir, pbsc[3], pbsc[2])
+			category_json = get_category_json(tmp_category_dir, category)
+			prepare_r_b_s_c_no_products_related(asin, no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
+			prepare_r_b_s_c_influential_details(asin, also_bought, also_viewed, bought_together)
+
+		for pbsc in update_needed:
+			update_no_products_related(pbsc[0])
+			update_influential_details(pbsc[0], pbsc[1], pbsc[2], pbsc[3])
+		
+		del global_data['unavailable_products'][asin]
 
 def get_attributes(json_line):
 	FLAG = True
