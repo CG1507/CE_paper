@@ -7,6 +7,7 @@ import pickle
 import synch
 import os
 
+#change path
 price_details_path = '/media/dell/Seagate Expansion Drive/CE_paper/Implementation/tmp_data/price.pkl'
 with open(price_details_path, 'rb') as f:
 	price_scale = pickle.load(f)
@@ -202,7 +203,7 @@ def get_reviewer_details(tmp_category_dir, category, reviewerID, asin, sentiment
 		buy_again_value = buy_again(reviewer_json, asin)
 		if buy_again_value == 0:
 			reviewer_json['also_bought_influential'], reviewer_json['also_viewed_influential'], reviewer_json['bought_together_influential'] = get_r_b_s_c_influential_details(asin, reviewer_json['also_bought_influential'], reviewer_json['also_viewed_influential'], reviewer_json['bought_together_influential'])
-		reviewer_json['buy_again'] += buy_again_value
+		reviewer_json['buy_again'] += buy_again_value#change path
 		reviewer_json['reviews'] = add_review_to_reviewer(reviewer_json, asin, category, categories, brand)
 		reviewer_json['#_products_related'] = r_b_s_c_no_products_related(asin, reviewer_json['#_products_related']['also_bought'], reviewer_json['#_products_related']['also_viewed'], reviewer_json['#_products_related']['bought_together'])
 		reviewer_json['fav_category'], reviewer_json['fav_subcategory'], reviewer_json['fav_brand'] = get_favourite(reviewer_json)
@@ -640,12 +641,43 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, sentiment,
 			category_json['#_products_related'] = no_products_related
 			writing_category_file_pointer = io.create_file(tmp_category_dir + pbsc[3] + '/categories/' + pbsc[3] + '.json')
 			io.write_line(writing_category_file_pointer, json.dumps(category_json))
-			writing_category_file_pointer.close()			
+			writing_category_file_pointer.close()
 
 			update_no_products_related(pbsc[0])
 			update_influential_details(pbsc[0], pbsc[1], pbsc[2], pbsc[3])
 
-						
+			brand_json = get_brand_json(pbsc[1])
+			also_bought_influential, also_viewed_influential, bought_together_influential = brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential']
+			no_products_related = brand_json['#_products_related']
+			no_products_related = r_b_s_c_no_products_related(pbsc[0], no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
+			also_bought_influential, also_viewed_influential, bought_together_influential = get_r_b_s_c_influential_details(pbsc[0], also_bought_influential, also_viewed_influential, bought_together_influential)
+			brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential'] = also_bought_influential, also_viewed_influential, bought_together_influential
+			brand_json['#_products_related'] = no_products_related
+			writing_brand_file_pointer = io.create_file(global_data['available_brands'][brand])
+			io.write_line(writing_brand_file_pointer, json.dumps(brand_json))
+			writing_brand_file_pointer.close()
+
+			subcategory_json = get_subcategory_json(tmp_category_dir, pbsc[3], pbsc[2])
+			also_bought_influential, also_viewed_influential, bought_together_influential = subcategory_json['also_bought_influential'], subcategory_json['also_viewed_influential'], subcategory_json['bought_together_influential']
+			no_products_related = subcategory_json['#_products_related']
+			no_products_related = r_b_s_c_no_products_related(pbsc[0], no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
+			also_bought_influential, also_viewed_influential, bought_together_influential = get_r_b_s_c_influential_details(pbsc[0], also_bought_influential, also_viewed_influential, bought_together_influential)
+			subcategory_json['also_bought_influential'], subcategory_json['also_viewed_influential'], subcategory_json['bought_together_influential'] = also_bought_influential, also_viewed_influential, bought_together_influential
+			subcategory_json['#_products_related'] = no_products_related
+			writing_subcategory_file_pointer = io.create_file(tmp_category_dir + pbsc[3] + '/subcategories/' + pbsc[2] + '.json')
+			io.write_line(writing_subcategory_file_pointer, json.dumps(subcategory_json))
+			writing_subcategory_file_pointer.close()
+
+			category_json = get_category_json(tmp_category_dir, category)
+			also_bought_influential, also_viewed_influential, bought_together_influential = category_json['also_bought_influential'], category_json['also_viewed_influential'], category_json['bought_together_influential']
+			no_products_related = category_json['#_products_related']
+			no_products_related = r_b_s_c_no_products_related(pbsc[0], no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
+			also_bought_influential, also_viewed_influential, bought_together_influential = get_r_b_s_c_influential_details(pbsc[0], also_bought_influential, also_viewed_influential, bought_together_influential)
+			category_json['also_bought_influential'], category_json['also_viewed_influential'], category_json['bought_together_influential'] = also_bought_influential, also_viewed_influential, bought_together_influential
+			category_json['#_products_related'] = no_products_related
+			writing_category_file_pointer = io.create_file(tmp_category_dir + pbsc[3] + '/categories/' + pbsc[3] + '.json')
+			io.write_line(writing_category_file_pointer, json.dumps(category_json))
+			writing_category_file_pointer.close()
 		
 		del global_data['unavailable_products'][asin]
 
@@ -808,6 +840,7 @@ def write_feed_data(tmp_category_dir, category_names):
 	synch_data(paths, tmp_category_dir)
 
 def test():
+	#change path
 	tmp_category_dir = '/media/dell/Seagate Expansion Drive/CE_paper/Implementation/tmp_data/categories/'
 	category_names = ['Electronics']
 	write_feed_data(tmp_category_dir, category_names)
