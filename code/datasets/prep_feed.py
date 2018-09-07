@@ -78,28 +78,28 @@ def get_category_json(tmp_category_dir, category):
 	return category_json
 
 def prepare_r_b_s_c_no_products_related(asin, also_bought, also_viewed, bought_together):
-	reviewers_no_related = {}
-	reviewers_no_related['also_bought'] = also_bought
-	reviewers_no_related['also_viewed'] = also_viewed
-	reviewers_no_related['bought_together'] = bought_together
+	r_b_s_c_no_related = {}
+	r_b_s_c_no_related['also_bought'] = also_bought
+	r_b_s_c_no_related['also_viewed'] = also_viewed
+	r_b_s_c_no_related['bought_together'] = bought_together
 
 	product_json = get_product_json(asin)
-	reviewers_no_related['also_bought'] -= product_json['#_products_related']['also_bought']
-	reviewers_no_related['also_viewed'] -= product_json['#_products_related']['also_viewed']
-	reviewers_no_related['bought_together'] -= product_json['#_products_related']['bought_together']
-	return reviewers_no_related
+	r_b_s_c_no_related['also_bought'] -= product_json['#_products_related']['also_bought']
+	r_b_s_c_no_related['also_viewed'] -= product_json['#_products_related']['also_viewed']
+	r_b_s_c_no_related['bought_together'] -= product_json['#_products_related']['bought_together']
+	return r_b_s_c_no_related
 
 def r_b_s_c_no_products_related(asin, also_bought, also_viewed, bought_together):
-	reviewers_no_related = {}
-	reviewers_no_related['also_bought'] = also_bought
-	reviewers_no_related['also_viewed'] = also_viewed
-	reviewers_no_related['bought_together'] = bought_together
+	r_b_s_c_no_related = {}
+	r_b_s_c_no_related['also_bought'] = also_bought
+	r_b_s_c_no_related['also_viewed'] = also_viewed
+	r_b_s_c_no_related['bought_together'] = bought_together
 
 	product_json = get_product_json(asin)
-	reviewers_no_related['also_bought'] += product_json['#_products_related']['also_bought']
-	reviewers_no_related['also_viewed'] += product_json['#_products_related']['also_viewed']
-	reviewers_no_related['bought_together'] += product_json['#_products_related']['bought_together']
-	return reviewers_no_related
+	r_b_s_c_no_related['also_bought'] += product_json['#_products_related']['also_bought']
+	r_b_s_c_no_related['also_viewed'] += product_json['#_products_related']['also_viewed']
+	r_b_s_c_no_related['bought_together'] += product_json['#_products_related']['bought_together']
+	return r_b_s_c_no_related
 
 def add_review_to_reviewer(reviewer_json, asin, brand, subcategory, category):
 	if asin in reviewer_json['reviews']:
@@ -201,7 +201,7 @@ def get_reviewer_details(tmp_category_dir, category, reviewerID, asin, pos_senti
 		buy_again_value = buy_again(reviewer_json, asin)
 		if buy_again_value == 0:
 			reviewer_json['also_bought_influential'], reviewer_json['also_viewed_influential'], reviewer_json['bought_together_influential'] = get_r_b_s_c_influential_details(asin, reviewer_json['also_bought_influential'], reviewer_json['also_viewed_influential'], reviewer_json['bought_together_influential'])
-		reviewer_json['buy_again'] += buy_again_value#change path
+		reviewer_json['buy_again'] += buy_again_value
 		reviewer_json['reviews'] = add_review_to_reviewer(reviewer_json, asin, brand, subcategory, category)
 		reviewer_json['#_products_related'] = r_b_s_c_no_products_related(asin, reviewer_json['#_products_related']['also_bought'], reviewer_json['#_products_related']['also_viewed'], reviewer_json['#_products_related']['bought_together'])
 		reviewer_json['fav_brand'], reviewer_json['fav_subcategory'], reviewer_json['fav_category'] = get_favourite(reviewer_json)
