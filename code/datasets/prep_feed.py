@@ -565,7 +565,6 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti,
 		product_json['engaged_time'] = unixtime.days_difference(product_json['first_purchase'], [year, month, date])
 		product_json['#_products_related'] = no_products_related(related)
 		product_json['buy_again'] += repeated_purchase(tmp_category_dir, category, reviewerID, asin)
-		product_json['all_categories'] = categories
 		product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential'] = get_influential_details(related, asin, brand, subcategory, category)
 
 		writing_product_file_pointer = io.create_file(file_path)
@@ -574,7 +573,7 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti,
 
 	else:
 		global_data['available_products'][asin] = file_path
-	
+
 		product_json = {}
 		product_json['#_reviews'] = 1
 		product_json['#_+ve_reviews'], product_json['#_-ve_reviews'] = pos_senti, neg_senti
@@ -587,87 +586,74 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti,
 		product_json['related'] = related
 		product_json['#_products_related'] = no_products_related(related)
 		product_json['buy_again'] = 0
-		product_json['all_categories'] = categories
 		product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential'] = get_influential_details(related, asin, brand, subcategory, category)
 
 		writing_product_file_pointer = io.create_file(file_path)
 		io.write_line(writing_product_file_pointer, json.dumps(product_json))
 		writing_product_file_pointer.close()
 
-	if asin in global_data['unavailable_products']:
-		update_needed = global_data['unavailable_products'][asin]
+		if asin in global_data['unavailable_products']:
+			update_needed = global_data['unavailable_products'][asin]
 
-		for pbsc in update_needed:
-			brand_json = get_brand_json(pbsc[1])
-			also_bought_influential, also_viewed_influential, bought_together_influential = brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential']
-			no_products_related = brand_json['#_products_related']
-			no_products_related = prepare_r_b_s_c_no_products_related(pbsc[0], no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
-			also_bought_influential, also_viewed_influential, bought_together_influential = prepare_r_b_s_c_influential_details(pbsc[0], also_bought_influential, also_viewed_influential, bought_together_influential)
-			brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential'] = also_bought_influential, also_viewed_influential, bought_together_influential
-			brand_json['#_products_related'] = no_products_related
-			writing_brand_file_pointer = io.create_file(global_data['available_brands'][brand])
-			io.write_line(writing_brand_file_pointer, json.dumps(brand_json))
-			writing_brand_file_pointer.close()
+			for pbsc in update_needed:
+				brand_json = get_brand_json(pbsc[1])
+				also_bought_influential, also_viewed_influential, bought_together_influential = brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential']
+				no_products_related = brand_json['#_products_related']
+				brand_json['#_products_related'] = prepare_r_b_s_c_no_products_related(pbsc[0], no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
+				brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential'] = prepare_r_b_s_c_influential_details(pbsc[0], also_bought_influential, also_viewed_influential, bought_together_influential)
+				writing_brand_file_pointer = io.create_file(global_data['available_brands'][brand])
+				io.write_line(writing_brand_file_pointer, json.dumps(brand_json))
+				writing_brand_file_pointer.close()
 
-			subcategory_json = get_subcategory_json(tmp_category_dir, pbsc[3], pbsc[2])
-			also_bought_influential, also_viewed_influential, bought_together_influential = subcategory_json['also_bought_influential'], subcategory_json['also_viewed_influential'], subcategory_json['bought_together_influential']
-			no_products_related = subcategory_json['#_products_related']
-			no_products_related = prepare_r_b_s_c_no_products_related(pbsc[0], no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
-			also_bought_influential, also_viewed_influential, bought_together_influential = prepare_r_b_s_c_influential_details(pbsc[0], also_bought_influential, also_viewed_influential, bought_together_influential)
-			subcategory_json['also_bought_influential'], subcategory_json['also_viewed_influential'], subcategory_json['bought_together_influential'] = also_bought_influential, also_viewed_influential, bought_together_influential
-			subcategory_json['#_products_related'] = no_products_related
-			writing_subcategory_file_pointer = io.create_file(tmp_category_dir + pbsc[3] + '/subcategories/' + pbsc[2] + '.json')
-			io.write_line(writing_subcategory_file_pointer, json.dumps(subcategory_json))
-			writing_subcategory_file_pointer.close()
+				subcategory_json = get_subcategory_json(tmp_category_dir, pbsc[3], pbsc[2])
+				also_bought_influential, also_viewed_influential, bought_together_influential = subcategory_json['also_bought_influential'], subcategory_json['also_viewed_influential'], subcategory_json['bought_together_influential']
+				no_products_related = subcategory_json['#_products_related']
+				subcategory_json['#_products_related'] = prepare_r_b_s_c_no_products_related(pbsc[0], no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
+				subcategory_json['also_bought_influential'], subcategory_json['also_viewed_influential'], subcategory_json['bought_together_influential'] = prepare_r_b_s_c_influential_details(pbsc[0], also_bought_influential, also_viewed_influential, bought_together_influential)
+				writing_subcategory_file_pointer = io.create_file(tmp_category_dir + pbsc[3] + '/subcategories/' + pbsc[2] + '.json')
+				io.write_line(writing_subcategory_file_pointer, json.dumps(subcategory_json))
+				writing_subcategory_file_pointer.close()
 
-			category_json = get_category_json(tmp_category_dir, category)
-			also_bought_influential, also_viewed_influential, bought_together_influential = category_json['also_bought_influential'], category_json['also_viewed_influential'], category_json['bought_together_influential']
-			no_products_related = category_json['#_products_related']
-			no_products_related = prepare_r_b_s_c_no_products_related(pbsc[0], no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
-			also_bought_influential, also_viewed_influential, bought_together_influential = prepare_r_b_s_c_influential_details(pbsc[0], also_bought_influential, also_viewed_influential, bought_together_influential)
-			category_json['also_bought_influential'], category_json['also_viewed_influential'], category_json['bought_together_influential'] = also_bought_influential, also_viewed_influential, bought_together_influential
-			category_json['#_products_related'] = no_products_related
-			writing_category_file_pointer = io.create_file(tmp_category_dir + pbsc[3] + '/categories/' + pbsc[3] + '.json')
-			io.write_line(writing_category_file_pointer, json.dumps(category_json))
-			writing_category_file_pointer.close()
+				category_json = get_category_json(tmp_category_dir, category)
+				also_bought_influential, also_viewed_influential, bought_together_influential = category_json['also_bought_influential'], category_json['also_viewed_influential'], category_json['bought_together_influential']
+				no_products_related = category_json['#_products_related']
+				category_json['#_products_related'] = prepare_r_b_s_c_no_products_related(pbsc[0], no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
+				category_json['also_bought_influential'], category_json['also_viewed_influential'], category_json['bought_together_influential'] = prepare_r_b_s_c_influential_details(pbsc[0], also_bought_influential, also_viewed_influential, bought_together_influential)
+				writing_category_file_pointer = io.create_file(tmp_category_dir + pbsc[3] + '/categories/' + pbsc[3] + '.json')
+				io.write_line(writing_category_file_pointer, json.dumps(category_json))
+				writing_category_file_pointer.close()
 
-			update_no_products_related(pbsc[0])
-			update_influential_details(pbsc[0], pbsc[1], pbsc[2], pbsc[3])
+				update_no_products_related(pbsc[0])
+				update_influential_details(pbsc[0], pbsc[1], pbsc[2], pbsc[3])
 
-			brand_json = get_brand_json(pbsc[1])
-			also_bought_influential, also_viewed_influential, bought_together_influential = brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential']
-			no_products_related = brand_json['#_products_related']
-			no_products_related = r_b_s_c_no_products_related(pbsc[0], no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
-			also_bought_influential, also_viewed_influential, bought_together_influential = get_r_b_s_c_influential_details(pbsc[0], also_bought_influential, also_viewed_influential, bought_together_influential)
-			brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential'] = also_bought_influential, also_viewed_influential, bought_together_influential
-			brand_json['#_products_related'] = no_products_related
-			writing_brand_file_pointer = io.create_file(global_data['available_brands'][brand])
-			io.write_line(writing_brand_file_pointer, json.dumps(brand_json))
-			writing_brand_file_pointer.close()
+				brand_json = get_brand_json(pbsc[1])
+				also_bought_influential, also_viewed_influential, bought_together_influential = brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential']
+				no_products_related = brand_json['#_products_related']
+				brand_json['#_products_related'] = r_b_s_c_no_products_related(pbsc[0], no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
+				brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential'] = get_r_b_s_c_influential_details(pbsc[0], also_bought_influential, also_viewed_influential, bought_together_influential)
+				writing_brand_file_pointer = io.create_file(global_data['available_brands'][brand])
+				io.write_line(writing_brand_file_pointer, json.dumps(brand_json))
+				writing_brand_file_pointer.close()
 
-			subcategory_json = get_subcategory_json(tmp_category_dir, pbsc[3], pbsc[2])
-			also_bought_influential, also_viewed_influential, bought_together_influential = subcategory_json['also_bought_influential'], subcategory_json['also_viewed_influential'], subcategory_json['bought_together_influential']
-			no_products_related = subcategory_json['#_products_related']
-			no_products_related = r_b_s_c_no_products_related(pbsc[0], no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
-			also_bought_influential, also_viewed_influential, bought_together_influential = get_r_b_s_c_influential_details(pbsc[0], also_bought_influential, also_viewed_influential, bought_together_influential)
-			subcategory_json['also_bought_influential'], subcategory_json['also_viewed_influential'], subcategory_json['bought_together_influential'] = also_bought_influential, also_viewed_influential, bought_together_influential
-			subcategory_json['#_products_related'] = no_products_related
-			writing_subcategory_file_pointer = io.create_file(tmp_category_dir + pbsc[3] + '/subcategories/' + pbsc[2] + '.json')
-			io.write_line(writing_subcategory_file_pointer, json.dumps(subcategory_json))
-			writing_subcategory_file_pointer.close()
+				subcategory_json = get_subcategory_json(tmp_category_dir, pbsc[3], pbsc[2])
+				also_bought_influential, also_viewed_influential, bought_together_influential = subcategory_json['also_bought_influential'], subcategory_json['also_viewed_influential'], subcategory_json['bought_together_influential']
+				no_products_related = subcategory_json['#_products_related']
+				subcategory_json['#_products_related'] = r_b_s_c_no_products_related(pbsc[0], no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
+				subcategory_json['also_bought_influential'], subcategory_json['also_viewed_influential'], subcategory_json['bought_together_influential'] = get_r_b_s_c_influential_details(pbsc[0], also_bought_influential, also_viewed_influential, bought_together_influential)
+				writing_subcategory_file_pointer = io.create_file(tmp_category_dir + pbsc[3] + '/subcategories/' + pbsc[2] + '.json')
+				io.write_line(writing_subcategory_file_pointer, json.dumps(subcategory_json))
+				writing_subcategory_file_pointer.close()
 
-			category_json = get_category_json(tmp_category_dir, category)
-			also_bought_influential, also_viewed_influential, bought_together_influential = category_json['also_bought_influential'], category_json['also_viewed_influential'], category_json['bought_together_influential']
-			no_products_related = category_json['#_products_related']
-			no_products_related = r_b_s_c_no_products_related(pbsc[0], no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
-			also_bought_influential, also_viewed_influential, bought_together_influential = get_r_b_s_c_influential_details(pbsc[0], also_bought_influential, also_viewed_influential, bought_together_influential)
-			category_json['also_bought_influential'], category_json['also_viewed_influential'], category_json['bought_together_influential'] = also_bought_influential, also_viewed_influential, bought_together_influential
-			category_json['#_products_related'] = no_products_related
-			writing_category_file_pointer = io.create_file(tmp_category_dir + pbsc[3] + '/categories/' + pbsc[3] + '.json')
-			io.write_line(writing_category_file_pointer, json.dumps(category_json))
-			writing_category_file_pointer.close()
-		
-		del global_data['unavailable_products'][asin]
+				category_json = get_category_json(tmp_category_dir, category)
+				also_bought_influential, also_viewed_influential, bought_together_influential = category_json['also_bought_influential'], category_json['also_viewed_influential'], category_json['bought_together_influential']
+				no_products_related = category_json['#_products_related']
+				category_json['#_products_related'] = r_b_s_c_no_products_related(pbsc[0], no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
+				category_json['also_bought_influential'], category_json['also_viewed_influential'], category_json['bought_together_influential'] = get_r_b_s_c_influential_details(pbsc[0], also_bought_influential, also_viewed_influential, bought_together_influential)
+				writing_category_file_pointer = io.create_file(tmp_category_dir + pbsc[3] + '/categories/' + pbsc[3] + '.json')
+				io.write_line(writing_category_file_pointer, json.dumps(category_json))
+				writing_category_file_pointer.close()
+			
+			del global_data['unavailable_products'][asin]
 
 def get_attributes(json_line):
 	FLAG = True
