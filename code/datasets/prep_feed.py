@@ -152,7 +152,6 @@ def prepare_r_b_s_c_influential_details(asin, also_bought, also_viewed, bought_t
 		influential_attributes[i]['price'] -= mapping[i]['price']
 		influential_attributes[i]['engaged_time'] -= mapping[i]['engaged_time']
 		influential_attributes[i]['#_products_related'] -= mapping[i]['#_products_related']
-		influential_attributes[i]['salerank'] -= mapping[i]['salerank']
 		influential_attributes[i]['buy_again'] -= mapping[i]['buy_again']
 
 	return influential_attributes['also_bought'], influential_attributes['also_viewed'], influential_attributes['bought_together']
@@ -175,7 +174,6 @@ def get_r_b_s_c_influential_details(asin, also_bought, also_viewed, bought_toget
 		influential_attributes[i]['price'] += mapping[i]['price']
 		influential_attributes[i]['engaged_time'] += mapping[i]['engaged_time']
 		influential_attributes[i]['#_products_related'] += mapping[i]['#_products_related']
-		influential_attributes[i]['salerank'] += mapping[i]['salerank']
 		influential_attributes[i]['buy_again'] += mapping[i]['buy_again']
 
 	return influential_attributes['also_bought'], influential_attributes['also_viewed'], influential_attributes['bought_together']
@@ -456,7 +454,6 @@ def get_influential_attributes(available_products):
 	influential_attributes['price'] = 0
 	influential_attributes['engaged_time'] = 0
 	influential_attributes['#_products_related'] = 0
-	influential_attributes['salerank'] = 0
 	influential_attributes['buy_again'] = 0
 
 	for product in available_products:
@@ -474,7 +471,6 @@ def get_influential_attributes(available_products):
 		influential_attributes['engaged_time'] += product_json['engaged_time']
 		influential_attributes['#_products_related'] += product_json['#_products_related']
 		influential_attributes['buy_again'] += product_json['buy_again']
-		influential_attributes['salerank'] += product_json['salerank']
 		reading_file_pointer.close()
 
 	return influential_attributes
@@ -570,7 +566,6 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti,
 		#Think about wheather its required or not
 		product_json['#_products_related'] = no_products_related(related)
 		product_json['buy_again'] += repeated_purchase(tmp_category_dir, category, reviewerID, asin)
-		product_json['salerank'] = salesRank
 		product_json['all_categories'] = categories
 		#Think about wheather its required or not
 		product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential'] = get_influential_details(related, asin, brand, subcategory, category)
@@ -593,7 +588,6 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti,
 		product_json['engaged_time'] = 0
 		product_json['related'] = related
 		product_json['#_products_related'] = no_products_related(related)
-		product_json['salerank'] = salesRank
 		product_json['buy_again'] = 0
 		product_json['all_categories'] = categories
 		product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential'] = get_influential_details(related, asin, brand, subcategory, category)
@@ -744,10 +738,8 @@ def get_attributes(json_line):
 		if json_line['salesRank'] != {}:
 			salesRank = json_line['salesRank']
 		else:
-			FLAG = False
 			salesRank = ''	
 	else:
-		FLAG = False
 		salesRank = ''
 
 	if 'brand' in json_line:
