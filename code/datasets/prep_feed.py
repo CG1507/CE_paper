@@ -101,7 +101,7 @@ def r_b_s_c_no_products_related(asin, also_bought, also_viewed, bought_together)
 	reviewers_no_related['bought_together'] += product_json['#_products_related']['bought_together']
 	return reviewers_no_related
 
-def add_review_to_reviewer(reviewer_json, asin, category, categories, brand):
+def add_review_to_reviewer(reviewer_json, asin, brand, subcategory, category):
 	if asin in reviewer_json['reviews']:
 		reviewer_json['reviews'][asin]['#_time'] += 1
 	else:
@@ -118,21 +118,21 @@ def buy_again(reviewer_json, asin):
 		return 0
 
 def get_favourite(reviewer_json):
-	category = {}
-	subcategory = {}
 	brand = {}
+	subcategory = {}
+	category = {}
 	
 	for product in reviewer_json['reviews']:
-		category[reviewer_json['reviews'][product]['category']] = 0
-		subcategory[reviewer_json['reviews'][product]['subcategory']] = 0
 		brand[reviewer_json['reviews'][product]['brand']] = 0
+		subcategory[reviewer_json['reviews'][product]['subcategory']] = 0
+		category[reviewer_json['reviews'][product]['category']] = 0
 
 	for product in reviewer_json['reviews']:
-		category[reviewer_json['reviews'][product]['category']] += reviewer_json['reviews'][product]['#_time']
-		subcategory[reviewer_json['reviews'][product]['subcategory']] += reviewer_json['reviews'][product]['#_time']
 		brand[reviewer_json['reviews'][product]['brand']] += reviewer_json['reviews'][product]['#_time']
+		subcategory[reviewer_json['reviews'][product]['subcategory']] += reviewer_json['reviews'][product]['#_time']
+		category[reviewer_json['reviews'][product]['category']] += reviewer_json['reviews'][product]['#_time']
 
-	return sorted(category, key=category.get, reverse=True)[0], sorted(subcategory, key=subcategory.get, reverse=True)[0], sorted(brand, key=brand.get, reverse=True)[0]
+	return sorted(brand, key=brand.get, reverse=True)[0], sorted(subcategory, key=subcategory.get, reverse=True)[0], sorted(category, key=category.get, reverse=True)[0]
 
 def prepare_r_b_s_c_influential_details(asin, also_bought, also_viewed, bought_together):
 	influential_attributes = {}
@@ -180,9 +180,10 @@ def get_r_b_s_c_influential_details(asin, also_bought, also_viewed, bought_toget
 
 	return influential_attributes['also_bought'], influential_attributes['also_viewed'], influential_attributes['bought_together']
 
-def get_reviewer_details(tmp_category_dir, category, reviewerID, asin, sentiment, total_reacted, helpfulness, rating, summary, date, month, year, day, title, price, related, salesRank, brand, categories):
+def get_reviewer_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price, related, brand, categories):
 	global global_data
 
+	subcategory = '_'.join(categories[0][1:])
 	reviewer_filepath = tmp_category_dir + category + '/reviewers/' + reviewerID + '.json'
 
 	if reviewerID in global_data['available_reviewers']:
@@ -192,7 +193,6 @@ def get_reviewer_details(tmp_category_dir, category, reviewerID, asin, sentiment
 		reviewer_json = json.loads(line)
 
 		reviewer_json['#_reviews'] += 1
-		pos_senti, neg_senti = get_sentiment_scale(sentiment)
 		reviewer_json['#_+ve_reviews'] += pos_senti
 		reviewer_json['#_-ve_reviews'] += neg_senti
 		reviewer_json['total_reacted'] += total_reacted
@@ -204,9 +204,9 @@ def get_reviewer_details(tmp_category_dir, category, reviewerID, asin, sentiment
 		if buy_again_value == 0:
 			reviewer_json['also_bought_influential'], reviewer_json['also_viewed_influential'], reviewer_json['bought_together_influential'] = get_r_b_s_c_influential_details(asin, reviewer_json['also_bought_influential'], reviewer_json['also_viewed_influential'], reviewer_json['bought_together_influential'])
 		reviewer_json['buy_again'] += buy_again_value#change path
-		reviewer_json['reviews'] = add_review_to_reviewer(reviewer_json, asin, category, categories, brand)
+		reviewer_json['reviews'] = add_review_to_reviewer(reviewer_json, asin, brand, subcategory, category)
 		reviewer_json['#_products_related'] = r_b_s_c_no_products_related(asin, reviewer_json['#_products_related']['also_bought'], reviewer_json['#_products_related']['also_viewed'], reviewer_json['#_products_related']['bought_together'])
-		reviewer_json['fav_category'], reviewer_json['fav_subcategory'], reviewer_json['fav_brand'] = get_favourite(reviewer_json)
+		reviewer_json['fav_brand'], reviewer_json['fav_subcategory'], reviewer_json['fav_category'] = get_favourite(reviewer_json)
 	
 		writing_reviewer_file_pointer = io.create_file(reviewer_filepath)
 		io.write_line(writing_reviewer_file_pointer, json.dumps(reviewer_json))
@@ -218,7 +218,7 @@ def get_reviewer_details(tmp_category_dir, category, reviewerID, asin, sentiment
 		product_json = get_product_json(asin)
 		reviewer_json = {}
 		reviewer_json['#_reviews'] = 1
-		reviewer_json['#_+ve_reviews'], reviewer_json['#_-ve_reviews'] = get_sentiment_scale(sentiment)
+		reviewer_json['#_+ve_reviews'], reviewer_json['#_-ve_reviews'] = pos_senti, neg_senti
 		reviewer_json['total_reacted'] = total_reacted
 		reviewer_json['helpfulness'] = helpfulness
 		reviewer_json['rating'] = rating
@@ -226,7 +226,7 @@ def get_reviewer_details(tmp_category_dir, category, reviewerID, asin, sentiment
 		reviewer_json['first_purchase'] = [year, month, date]
 		reviewer_json['engaged_time'] = 0
 		reviewer_json['buy_again'] = 0
-		reviewer_json['reviews'] = {asin: {'#_time': 1, 'category': category, 'subcategory': categories, 'brand': brand}}
+		reviewer_json['reviews'] = {asin: {'#_time': 1, 'category': category, 'subcategory': subcategory, 'brand': brand}}
 		reviewer_json['#_products_related'] = no_products_related(related)
 		reviewer_json['fav_category'] = category
 		reviewer_json['fav_subcategory'] = ''
@@ -237,7 +237,7 @@ def get_reviewer_details(tmp_category_dir, category, reviewerID, asin, sentiment
 		io.write_line(writing_reviewer_file_pointer, json.dumps(reviewer_json))
 		writing_reviewer_file_pointer.close()
 
-def get_brand_details(tmp_category_dir, category, reviewerID, asin, sentiment, total_reacted, helpfulness, rating, summary, date, month, year, day, title, price, related, salesRank, brand, categories):
+def get_brand_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price, related, brand, categories):
 	global global_data
 
 	brand_filepath = tmp_category_dir + category + '/brands/' + brand + '.json'
@@ -249,7 +249,6 @@ def get_brand_details(tmp_category_dir, category, reviewerID, asin, sentiment, t
 		brand_json = json.loads(line)
 
 		brand_json['#_reviews'] += 1
-		pos_senti, neg_senti = get_sentiment_scale(sentiment)
 		brand_json['#_+ve_reviews'] += pos_senti
 		brand_json['#_-ve_reviews'] += neg_senti
 		brand_json['total_reacted'] += total_reacted
@@ -274,7 +273,7 @@ def get_brand_details(tmp_category_dir, category, reviewerID, asin, sentiment, t
 		brand_json = {}
 		brand_json['#_reviews'] = 1
 		brand_json['#_products'] = 1
-		brand_json['#_+ve_reviews'], brand_json['#_-ve_reviews'] = get_sentiment_scale(sentiment)
+		brand_json['#_+ve_reviews'], brand_json['#_-ve_reviews'] = pos_senti, neg_senti
 		brand_json['total_reacted'] = total_reacted
 		brand_json['helpfulness'] = helpfulness
 		brand_json['rating'] = rating
@@ -289,7 +288,7 @@ def get_brand_details(tmp_category_dir, category, reviewerID, asin, sentiment, t
 		io.write_line(writing_brand_file_pointer, json.dumps(brand_json))
 		writing_brand_file_pointer.close()
 
-def get_subcategory_details(tmp_category_dir, category, reviewerID, asin, sentiment, total_reacted, helpfulness, rating, summary, date, month, year, day, title, price, related, salesRank, brand, categories):
+def get_subcategory_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price, related, brand, categories):
 	global global_data
 
 	subcategory = '_'.join(categories[0][1:])
@@ -304,7 +303,6 @@ def get_subcategory_details(tmp_category_dir, category, reviewerID, asin, sentim
 		if brand not in global_data['available_subcategories'][subcategory]:
 			global_data['available_subcategories'][subcategory].append(brand)
 		subcategory_json['#_reviews'] += 1
-		pos_senti, neg_senti = get_sentiment_scale(sentiment)
 		subcategory_json['#_+ve_reviews'] += pos_senti
 		subcategory_json['#_-ve_reviews'] += neg_senti
 		subcategory_json['total_reacted'] += total_reacted
@@ -329,7 +327,7 @@ def get_subcategory_details(tmp_category_dir, category, reviewerID, asin, sentim
 		subcategory_json = {}
 		subcategory_json['#_reviews'] = 1
 		subcategory_json['#_products'] = 1
-		subcategory_json['#_+ve_reviews'], subcategory_json['#_-ve_reviews'] = get_sentiment_scale(sentiment)
+		subcategory_json['#_+ve_reviews'], subcategory_json['#_-ve_reviews'] = pos_senti, neg_senti
 		subcategory_json['total_reacted'] = total_reacted
 		subcategory_json['helpfulness'] = helpfulness
 		subcategory_json['rating'] = rating
@@ -344,7 +342,7 @@ def get_subcategory_details(tmp_category_dir, category, reviewerID, asin, sentim
 		io.write_line(writing_subcategory_file_pointer, json.dumps(subcategory_json))
 		writing_subcategory_file_pointer.close()
 
-def get_category_details(tmp_category_dir, category, reviewerID, asin, sentiment, total_reacted, helpfulness, rating, summary, date, month, year, day, title, price, related, salesRank, brand, categories):
+def get_category_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price, related, brand, categories):
 	global global_data
 
 	subcategory = '_'.join(categories[0][1:])
@@ -359,7 +357,6 @@ def get_category_details(tmp_category_dir, category, reviewerID, asin, sentiment
 		if subcategory not in global_data['available_categories'][category]:
 			global_data['available_categories'][category].append(subcategory)
 		category_json['#_reviews'] += 1
-		pos_senti, neg_senti = get_sentiment_scale(sentiment)
 		category_json['#_+ve_reviews'] += pos_senti
 		category_json['#_-ve_reviews'] += neg_senti
 		category_json['total_reacted'] += total_reacted
@@ -384,7 +381,7 @@ def get_category_details(tmp_category_dir, category, reviewerID, asin, sentiment
 		category_json = {}
 		category_json['#_reviews'] = 1
 		category_json['#_products'] = 1
-		category_json['#_+ve_reviews'], category_json['#_-ve_reviews'] = get_sentiment_scale(sentiment)
+		category_json['#_+ve_reviews'], category_json['#_-ve_reviews'] = pos_senti, neg_senti
 		category_json['total_reacted'] = total_reacted
 		category_json['helpfulness'] = helpfulness
 		category_json['rating'] = rating
@@ -548,7 +545,7 @@ def update_influential_details(product, brand, subcategory, category):
 	io.write_line(writing_product_file_pointer, json.dumps(product_json))
 	writing_product_file_pointer.close()
 
-def get_product_details(tmp_category_dir, category, reviewerID, asin, sentiment, total_reacted, helpfulness, rating, summary, date, month, year, day, title, price, related, salesRank, brand, categories):
+def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price, related, brand, categories):
 	global global_data
 
 	subcategory = '_'.join(categories[0][1:])
@@ -564,7 +561,6 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, sentiment,
 		reading_file_pointer.close()
 
 		product_json['#_reviews'] += 1
-		pos_senti, neg_senti = get_sentiment_scale(sentiment)
 		product_json['#_+ve_reviews'] += pos_senti
 		product_json['#_-ve_reviews'] += neg_senti
 		product_json['total_reacted'] += total_reacted
@@ -588,7 +584,7 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, sentiment,
 	
 		product_json = {}
 		product_json['#_reviews'] = 1
-		product_json['#_+ve_reviews'], product_json['#_-ve_reviews'] = get_sentiment_scale(sentiment)
+		product_json['#_+ve_reviews'], product_json['#_-ve_reviews'] = pos_senti, neg_senti
 		product_json['total_reacted'] = total_reacted
 		product_json['helpfulness'] = helpfulness
 		product_json['rating'] = rating
@@ -816,6 +812,7 @@ def synch_data(paths, tmp_category_dir):
 				if FLAG:
 					sentiment, total_reacted, helpfulness, rating = get_review_details(helpful, reviewText, overall)
 					date, month, year, day = unix_to_attributes(unixReviewTime)
+					pos_senti, neg_senti = get_sentiment_scale(sentiment)
 				else:
 					print('Till now reject')
 
