@@ -446,7 +446,7 @@ def no_products_related(related):
 
 def repeated_purchase(tmp_category_dir, category, reviewerID, asin):
 	reading_reviewer_file_pointer = io.read_file(tmp_category_dir + category + '/reviewers/' + reviewerID + '.json')
-	line = reading_file_pointer.readline()
+	line = reading_reviewer_file_pointer.readline()
 	reviewer_json = json.loads(line)
 	reading_reviewer_file_pointer.close()
 	if 'reviews' in reviewer_json:
