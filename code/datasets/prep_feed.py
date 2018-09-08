@@ -751,10 +751,7 @@ def get_attributes(json_line):
 		related = {"also_bought": [], "also_viewed": [], "bought_together": []}
 
 	if 'salesRank' in json_line:
-		if json_line['salesRank'] != {}:
-			salesRank = json_line['salesRank']
-		else:
-			salesRank = ''	
+		salesRank = json_line['salesRank']
 	else:
 		salesRank = ''
 
