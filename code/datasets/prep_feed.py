@@ -604,14 +604,15 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti,
 		io.write_line(writing_category_file_pointer, json.dumps(category_json))
 		writing_category_file_pointer.close()
 
-		reviewer_json = get_reviewer_json(reviewerID)
-		also_bought_influential, also_viewed_influential, bought_together_influential = reviewer_json['also_bought_influential'], reviewer_json['also_viewed_influential'], reviewer_json['bought_together_influential']
-		no_products_related = reviewer_json['#_products_related']
-		reviewer_json['#_products_related'] = prepare_r_b_s_c_no_products_related(asin, no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
-		reviewer_json['also_bought_influential'], reviewer_json['also_viewed_influential'], reviewer_json['bought_together_influential'] = prepare_r_b_s_c_influential_details(asin, also_bought_influential, also_viewed_influential, bought_together_influential)
-		writing_reviewer_file_pointer = io.create_file(global_data['available_reviewers'][reviewerID])
-		io.write_line(writing_reviewer_file_pointer, json.dumps(reviewer_json))
-		writing_reviewer_file_pointer.close()
+		if repeated_purchase(tmp_category_dir, category, reviewerID, asin):
+			reviewer_json = get_reviewer_json(reviewerID)
+			also_bought_influential, also_viewed_influential, bought_together_influential = reviewer_json['also_bought_influential'], reviewer_json['also_viewed_influential'], reviewer_json['bought_together_influential']
+			no_products_related = reviewer_json['#_products_related']
+			reviewer_json['#_products_related'] = prepare_r_b_s_c_no_products_related(asin, no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
+			reviewer_json['also_bought_influential'], reviewer_json['also_viewed_influential'], reviewer_json['bought_together_influential'] = prepare_r_b_s_c_influential_details(asin, also_bought_influential, also_viewed_influential, bought_together_influential)
+			writing_reviewer_file_pointer = io.create_file(global_data['available_reviewers'][reviewerID])
+			io.write_line(writing_reviewer_file_pointer, json.dumps(reviewer_json))
+			writing_reviewer_file_pointer.close()
 
 		product_json['#_products_related'] = no_products_related(related)
 		product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential'] = get_influential_details(related, asin, brand, subcategory, category, reviewerID)
