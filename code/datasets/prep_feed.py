@@ -252,14 +252,19 @@ def get_brand_details(tmp_category_dir, category, reviewerID, asin, pos_senti, n
 		brand_json['total_reacted'] += total_reacted
 		brand_json['helpfulness'] += helpfulness
 		brand_json['rating'] += rating
-		brand_json['price'] += price_scale
 		brand_json['engaged_time'] = unixtime.days_difference(brand_json['first_purchase'], [year, month, date])
 		if asin not in brand_json['products']:
 			brand_json['#_products'] += 1
-			brand_json['products'].append([asin])
+			brand_json['products'].append(asin)
+			brand_json['price'] += price_scale
 			brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential'] = get_r_b_s_c_influential_details(asin, brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential'])
 			brand_json['#_products_related'] = r_b_s_c_no_products_related(asin, brand_json['#_products_related']['also_bought'], brand_json['#_products_related']['also_viewed']. brand_json['#_products_related']['bought_together'])
-		
+		else:
+			brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential'] = prepare_r_b_s_c_influential_details(asin, brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential'])
+			brand_json['#_products_related'] = prepare_r_b_s_c_no_products_related(asin, brand_json['#_products_related']['also_bought'], brand_json['#_products_related']['also_viewed']. brand_json['#_products_related']['bought_together'])
+			brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential'] = get_r_b_s_c_influential_details(asin, brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential'])
+			brand_json['#_products_related'] = r_b_s_c_no_products_related(asin, brand_json['#_products_related']['also_bought'], brand_json['#_products_related']['also_viewed']. brand_json['#_products_related']['bought_together'])
+
 		writing_brand_file_pointer = io.create_file(brand_filepath)
 		io.write_line(writing_brand_file_pointer, json.dumps(brand_json))
 		writing_brand_file_pointer.close()
@@ -279,7 +284,7 @@ def get_brand_details(tmp_category_dir, category, reviewerID, asin, pos_senti, n
 		brand_json['first_purchase'] = [year, month, date]
 		brand_json['engaged_time'] = 0
 		brand_json['products'] = [asin]
-		brand_json['#_products_related'] = no_products_related(related)
+		brand_json['#_products_related'] = product_json['#_products_related']
 		brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential'] = product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential']
 		
 		writing_brand_file_pointer = io.create_file(brand_filepath)
@@ -310,7 +315,7 @@ def get_subcategory_details(tmp_category_dir, category, reviewerID, asin, pos_se
 		subcategory_json['engaged_time'] = unixtime.days_difference(subcategory_json['first_purchase'], [year, month, date])
 		if asin not in subcategory_json['products']:
 			subcategory_json['#_products'] += 1
-			subcategory_json['products'].append([asin])
+			subcategory_json['products'].append(asin)
 			subcategory_json['also_bought_influential'], subcategory_json['also_viewed_influential'], subcategory_json['bought_together_influential'] = get_r_b_s_c_influential_details(asin, subcategory_json['also_bought_influential'], subcategory_json['also_viewed_influential'], subcategory_json['bought_together_influential'])
 			subcategory_json['#_products_related'] = r_b_s_c_no_products_related(asin, subcategory_json['#_products_related']['also_bought'], subcategory_json['#_products_related']['also_viewed']. subcategory_json['#_products_related']['bought_together'])
 		
@@ -364,7 +369,7 @@ def get_category_details(tmp_category_dir, category, reviewerID, asin, pos_senti
 		category_json['engaged_time'] = unixtime.days_difference(category_json['first_purchase'], [year, month, date])
 		if asin not in category_json['products']:
 			category_json['#_products'] += 1
-			category_json['products'].append([asin])
+			category_json['products'].append(asin)
 			category_json['also_bought_influential'], category_json['also_viewed_influential'], category_json['bought_together_influential'] = get_r_b_s_c_influential_details(asin, category_json['also_bought_influential'], category_json['also_viewed_influential'], category_json['bought_together_influential'])
 			category_json['#_products_related'] = r_b_s_c_no_products_related(asin, category_json['#_products_related']['also_bought'], category_json['#_products_related']['also_viewed']. category_json['#_products_related']['bought_together'])
 		
