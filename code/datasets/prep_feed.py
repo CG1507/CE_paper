@@ -445,7 +445,7 @@ def no_products_related(related):
 	return no_products
 
 def repeated_purchase(tmp_category_dir, category, reviewerID, asin):
-	reading_reviewer_file_pointer = io.read_file(tmp_category_dir + category + '/reviewers/' + asin + '.json')
+	reading_reviewer_file_pointer = io.read_file(tmp_category_dir + category + '/reviewers/' + reviewerID + '.json')
 	line = reading_file_pointer.readline()
 	reviewer_json = json.loads(line)
 	reading_reviewer_file_pointer.close()
@@ -575,8 +575,13 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti,
 		product_json['helpfulness'] += helpfulness
 		product_json['rating'] += rating
 		product_json['engaged_time'] = unixtime.days_difference(product_json['first_purchase'], [year, month, date])
-		product_json['buy_again'] += repeated_purchase(tmp_category_dir, category, reviewerID, asin)
 		
+		if reviewerID in global_data['available_reviewers']:
+			repeated_purchase_value = repeated_purchase(tmp_category_dir, category, reviewerID, asin)
+		else:
+			repeated_purchase_value = 0
+		product_json['buy_again'] += repeated_purchase_value
+
 		brand_json = get_brand_json(brand)
 		also_bought_influential, also_viewed_influential, bought_together_influential = brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential']
 		no_products_related = brand_json['#_products_related']
@@ -604,7 +609,7 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti,
 		io.write_line(writing_category_file_pointer, json.dumps(category_json))
 		writing_category_file_pointer.close()
 
-		if repeated_purchase(tmp_category_dir, category, reviewerID, asin):
+		if repeated_purchase_value:
 			reviewer_json = get_reviewer_json(reviewerID)
 			also_bought_influential, also_viewed_influential, bought_together_influential = reviewer_json['also_bought_influential'], reviewer_json['also_viewed_influential'], reviewer_json['bought_together_influential']
 			no_products_related = reviewer_json['#_products_related']
