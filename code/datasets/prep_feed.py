@@ -385,7 +385,7 @@ def get_category_details(tmp_category_dir, category, reviewerID, asin, pos_senti
 		writing_category_file_pointer.close()
 
 	else:
-		global_data['available_subcategories'][category] = [subcategory]
+		global_data['available_categories'][category] = [subcategory]
 		
 		product_json = get_product_json(asin)
 		category_json = {}
