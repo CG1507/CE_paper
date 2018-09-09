@@ -10,16 +10,16 @@ import os
 #change path
 price_details_path = '/media/dell/Seagate Expansion Drive/CE_paper/Implementation/tmp_data/price.pkl'
 with open(price_details_path, 'rb') as f:
-	price_scale = pickle.load(f)
+	price_scale_dict = pickle.load(f)
 
 global_data = {
-				'price_scale': price_scale, 
-				'available_reviewers': {},
-				'unavailable_products': {},
+				'price_scale': price_scale_dict, 
 				'available_products': {},
 				'available_brands': {},
 				'available_subcategories': {},
-				'available_categories': {}
+				'available_categories': {},
+				'available_reviewers': {},
+				'unavailable_products': {}
 			  }
 
 def get_sentiment_scale(sentiment):
@@ -84,7 +84,6 @@ def get_reviewer_json(reviewerID):
 	reviewer_json = json.loads(line)
 	reading_reviewer_file_pointer.close()
 	return reviewer_json
-
 
 def prepare_r_b_s_c_no_products_related(asin, also_bought, also_viewed, bought_together):
 	r_b_s_c_no_related = {}
@@ -234,10 +233,10 @@ def get_reviewer_details(tmp_category_dir, category, reviewerID, asin, pos_senti
 		reviewer_json['engaged_time'] = 0
 		reviewer_json['buy_again'] = 0
 		reviewer_json['reviews'] = {asin: {'#_time': 1, 'category': category, 'subcategory': subcategory, 'brand': brand}}
-		reviewer_json['#_products_related'] = product_json['#_products_related']
 		reviewer_json['fav_category'] = category
 		reviewer_json['fav_subcategory'] = subcategory
 		reviewer_json['fav_brand'] = brand
+		reviewer_json['#_products_related'] = product_json['#_products_related']
 		reviewer_json['also_bought_influential'], reviewer_json['also_viewed_influential'], reviewer_json['bought_together_influential'] = product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential']
 		
 		writing_reviewer_file_pointer = io.create_file(reviewer_filepath)
