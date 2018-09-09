@@ -114,9 +114,9 @@ def add_review_to_reviewer(reviewer_json, asin, brand, subcategory, category):
 		reviewer_json['reviews'][asin]['#_time'] += 1
 	else:
 		reviewer_json['reviews'][asin]['#_time'] = 1
-		reviewer_json['reviews'][asin]['category'] = category
-		reviewer_json['reviews'][asin]['subcategory'] = categories
 		reviewer_json['reviews'][asin]['brand'] = brand
+		reviewer_json['reviews'][asin]['subcategory'] = subcategory
+		reviewer_json['reviews'][asin]['category'] = category
 	return reviewer_json['reviews']
 
 def buy_again(reviewer_json, asin):
@@ -159,8 +159,10 @@ def prepare_r_b_s_c_influential_details(asin, also_bought, also_viewed, bought_t
 		influential_attributes[i]['rating'] -= mapping[i]['rating']
 		influential_attributes[i]['price'] -= mapping[i]['price']
 		influential_attributes[i]['engaged_time'] -= mapping[i]['engaged_time']
-		influential_attributes[i]['#_products_related'] -= mapping[i]['#_products_related']
 		influential_attributes[i]['buy_again'] -= mapping[i]['buy_again']
+		influential_attributes[i]['#_products_related']['also_bought'] -= mapping[i]['#_products_related']['also_bought']
+		influential_attributes[i]['#_products_related']['also_viewed'] -= mapping[i]['#_products_related']['also_viewed']
+		influential_attributes[i]['#_products_related']['bought_together'] -= mapping[i]['#_products_related']['bought_together']
 
 	return influential_attributes['also_bought'], influential_attributes['also_viewed'], influential_attributes['bought_together']
 
@@ -181,8 +183,10 @@ def get_r_b_s_c_influential_details(asin, also_bought, also_viewed, bought_toget
 		influential_attributes[i]['rating'] += mapping[i]['rating']
 		influential_attributes[i]['price'] += mapping[i]['price']
 		influential_attributes[i]['engaged_time'] += mapping[i]['engaged_time']
-		influential_attributes[i]['#_products_related'] += mapping[i]['#_products_related']
 		influential_attributes[i]['buy_again'] += mapping[i]['buy_again']
+		influential_attributes[i]['#_products_related']['also_bought'] += mapping[i]['#_products_related']['also_bought']
+		influential_attributes[i]['#_products_related']['also_viewed'] += mapping[i]['#_products_related']['also_viewed']
+		influential_attributes[i]['#_products_related']['bought_together'] += mapping[i]['#_products_related']['bought_together']
 
 	return influential_attributes['also_bought'], influential_attributes['also_viewed'], influential_attributes['bought_together']
 
@@ -465,13 +469,17 @@ def get_influential_attributes(available_products):
 	influential_attributes['rating'] = 0
 	influential_attributes['price'] = 0
 	influential_attributes['engaged_time'] = 0
-	influential_attributes['#_products_related'] = 0
 	influential_attributes['buy_again'] = 0
+	influential_attributes['#_products_related'] = {}
+	influential_attributes['#_products_related']['also_bought'] = 0
+	influential_attributes['#_products_related']['also_viewed'] = 0
+	influential_attributes['#_products_related']['bought_together'] = 0
 
 	for product in available_products:
 		reading_file_pointer = io.read_file(global_data['available_products'][product])
 		line = reading_file_pointer.readline()
 		product_json = json.loads(line)
+		reading_file_pointer.close()
 
 		influential_attributes['#_reviews'] += product_json['#_reviews']
 		influential_attributes['#_+ve_reviews'] += product_json['#_+ve_reviews']
@@ -481,9 +489,10 @@ def get_influential_attributes(available_products):
 		influential_attributes['rating'] += product_json['rating']
 		influential_attributes['price'] += product_json['price']
 		influential_attributes['engaged_time'] += product_json['engaged_time']
-		influential_attributes['#_products_related'] += product_json['#_products_related']
 		influential_attributes['buy_again'] += product_json['buy_again']
-		reading_file_pointer.close()
+		influential_attributes['#_products_related']['also_bought'] += product_json['#_products_related']['also_bought']
+		influential_attributes['#_products_related']['also_viewed'] += product_json['#_products_related']['also_viewed']
+		influential_attributes['#_products_related']['bought_together'] += product_json['#_products_related']['bought_together']
 
 	return influential_attributes
 
