@@ -423,6 +423,7 @@ def unix_to_attributes(unixReviewTime):
 	return int(date), int(month), int(year), int(day)
 
 def no_products_related(related):
+	global global_data
 	no_products = {}
 	
 	count = 0 
@@ -639,8 +640,8 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti,
 		product_json['first_purchase'] = [year, month, date]
 		product_json['engaged_time'] = 0
 		product_json['related'] = related
-		product_json['#_products_related'] = no_products_related(related)
 		product_json['buy_again'] = 0
+		product_json['#_products_related'] = no_products_related(related)
 		product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential'] = get_influential_details(related, asin, brand, subcategory, category, reviewerID)
 
 		writing_product_file_pointer = io.create_file(file_path)
