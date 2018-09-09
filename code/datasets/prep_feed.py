@@ -240,7 +240,7 @@ def get_reviewer_details(tmp_category_dir, category, reviewerID, asin, pos_senti
 		reviewer_json['helpfulness'] += helpfulness
 		reviewer_json['rating'] += rating
 		reviewer_json['price'] += price_scale
-		reviewer_json['engaged_time'] = unixtime.days_difference(reviewer_json['first_purchase'], [year, month, date])
+		reviewer_json['engaged_time'] = unixtime.days_difference(reviewer_json['first_purchase'], [year, month, date]) - reviewer_json['engaged_time']
 		
 		buy_again_value = buy_again(reviewer_json, asin)
 		reviewer_json['buy_again'] += buy_again_value
@@ -323,7 +323,7 @@ def get_brand_details(tmp_category_dir, category, reviewerID, asin, pos_senti, n
 		brand_json['total_reacted'] += total_reacted
 		brand_json['helpfulness'] += helpfulness
 		brand_json['rating'] += rating
-		brand_json['engaged_time'] = unixtime.days_difference(brand_json['first_purchase'], [year, month, date])
+		brand_json['engaged_time'] = unixtime.days_difference(brand_json['first_purchase'], [year, month, date]) - brand_json['engaged_time']
 		if asin not in brand_json['products']:
 			brand_json['#_products'] += 1
 			brand_json['products'].append(asin)
@@ -378,7 +378,7 @@ def get_subcategory_details(tmp_category_dir, category, reviewerID, asin, pos_se
 		subcategory_json['total_reacted'] += total_reacted
 		subcategory_json['helpfulness'] += helpfulness
 		subcategory_json['rating'] += rating
-		subcategory_json['engaged_time'] = unixtime.days_difference(subcategory_json['first_purchase'], [year, month, date])
+		subcategory_json['engaged_time'] = unixtime.days_difference(subcategory_json['first_purchase'], [year, month, date]) - subcategory_json['engaged_time']
 		if asin not in subcategory_json['products']:
 			subcategory_json['#_products'] += 1
 			subcategory_json['products'].append(asin)
@@ -433,7 +433,7 @@ def get_category_details(tmp_category_dir, category, reviewerID, asin, pos_senti
 		category_json['total_reacted'] += total_reacted
 		category_json['helpfulness'] += helpfulness
 		category_json['rating'] += rating
-		category_json['engaged_time'] = unixtime.days_difference(category_json['first_purchase'], [year, month, date])
+		category_json['engaged_time'] = unixtime.days_difference(category_json['first_purchase'], [year, month, date]) - category_json['engaged_time']
 		if asin not in category_json['products']:
 			category_json['#_products'] += 1
 			category_json['products'].append(asin)
@@ -642,7 +642,7 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti,
 		product_json['total_reacted'] += total_reacted
 		product_json['helpfulness'] += helpfulness
 		product_json['rating'] += rating
-		product_json['engaged_time'] = unixtime.days_difference(product_json['first_purchase'], [year, month, date])
+		product_json['engaged_time'] = unixtime.days_difference(product_json['first_purchase'], [year, month, date]) - product_json['engaged_time']
 		
 		if reviewerID in global_data['available_reviewers']:
 			repeated_purchase_value = repeated_purchase(tmp_category_dir, category, reviewerID, asin)
@@ -895,7 +895,7 @@ def get_json(tmp_category_dir, asin, brand, subcategory, category, reviewerID):
 
 def write_csv(tmp_category_dir, csv_file_path, product_json, brand_json, subcategory_json, category_json, reviewer_json):
 	csv_file_pointer = io.append_file(csv_file_path)
-	
+
 	product_json['#_reviews']
 	product_json['#_+ve_reviews']
 	product_json['#_-ve_reviews']
@@ -909,7 +909,7 @@ def write_csv(tmp_category_dir, csv_file_path, product_json, brand_json, subcate
 	product_json['#_products_related']['also_bought']
 	product_json['#_products_related']['also_viewed']
 	product_json['#_products_related']['bought_together']
-	
+
 	product_json['also_bought_influential']['#_reviews']
 	product_json['also_bought_influential']['#_+ve_reviews']
 	product_json['also_bought_influential']['#_-ve_reviews']
