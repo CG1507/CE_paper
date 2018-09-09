@@ -190,6 +190,37 @@ def get_r_b_s_c_influential_details(asin, also_bought, also_viewed, bought_toget
 
 	return influential_attributes['also_bought'], influential_attributes['also_viewed'], influential_attributes['bought_together']
 
+def get_related_match(related, products, fav_brand, fav_subcategory, fav_category):
+	global global_data
+	related_fav = {}
+	related_fav['bought'] = 0
+	related_fav['brand'] = 0
+	related_fav['subcategory'] = 0
+	related_fav['category'] = 0
+	new_related = []
+	for r in related['also_viewed']
+		if r in global_data['available_products']:
+			new_related.append(r)
+
+	for product in new_related:
+		if product in products:
+			related_fav['bought'] += 1
+
+		product_json = get_product_json(product)
+		related_product_brand = product_json['brand']
+		related_product_subcategory = product_json['subcategory']
+		related_product_category = product_json['category']
+		if fav_brand == related_product_brand:
+			related_fav['brand'] += 1
+
+		if fav_subcategory == related_product_subcategory:
+			related_fav['subcategory'] += 1
+
+		if fav_category == related_product_category:
+			related_fav['category'] += 1
+
+	return related_fav['bought'], related_fav['brand'], related_fav['subcategory'], related_fav['category']
+
 def get_reviewer_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price_scale, related, brand, categories):
 	global global_data
 
@@ -210,14 +241,37 @@ def get_reviewer_details(tmp_category_dir, category, reviewerID, asin, pos_senti
 		reviewer_json['rating'] += rating
 		reviewer_json['price'] += price_scale
 		reviewer_json['engaged_time'] = unixtime.days_difference(reviewer_json['first_purchase'], [year, month, date])
-		reviewer_json['buy_again'] += buy_again(reviewer_json, asin)
+		
+		buy_again_value = buy_again(reviewer_json, asin)
+		reviewer_json['buy_again'] += buy_again_value
+		reviewer_json['#_products'] += (1 - buy_again_value)
 
 		reviewer_json['reviews'] = add_review_to_reviewer(reviewer_json, asin, brand, subcategory, category)
 		reviewer_json['also_bought_influential'], reviewer_json['also_viewed_influential'], reviewer_json['bought_together_influential'] = get_r_b_s_c_influential_details(asin, reviewer_json['also_bought_influential'], reviewer_json['also_viewed_influential'], reviewer_json['bought_together_influential'])
 		reviewer_json['#_products_related'] = r_b_s_c_no_products_related(asin, reviewer_json['#_products_related']['also_bought'], reviewer_json['#_products_related']['also_viewed'], reviewer_json['#_products_related']['bought_together'])
 		
-		reviewer_json['fav_brand'], reviewer_json['fav_subcategory'], reviewer_json['fav_category'] = get_favourite(reviewer_json)
-	
+		reviewer_json['curr_product_brand'] = brand
+		reviewer_json['curr_product_subcategory'] = subcategory
+		reviewer_json['curr_product_category'] = category
+		reviewer_json['fav_brand_name'], reviewer_json['fav_subcategory_name'], reviewer_json['fav_category_name'] = get_favourite(reviewer_json)
+		reviewer_json['#_related_bought'], reviewer_json['#_related_brands_fav'], reviewer_json['#_related_subcategory_fav'], reviewer_json['#_related_category_fav'] = get_related_match(related, reviewer_json['reviews'].keys(), reviewer_json['fav_brand_name'], reviewer_json['fav_subcategory_name'], reviewer_json['fav_category_name'])
+		
+		if reviewer_json['fav_brand'] == reviewer_json['curr_product_brand']:
+			reviewer_json['fav_brand'] = 1
+		else:
+			reviewer_json['fav_brand'] = 0
+
+		if reviewer_json['fav_subcategory'] == reviewer_json['curr_product_subcategory']:
+			reviewer_json['fav_subcategory'] = 1
+		else:
+			reviewer_json['fav_subcategory'] = 0
+
+		if reviewer_json['fav_category'] == reviewer_json['curr_product_category']:
+			reviewer_json['fav_category'] = 1
+		else:
+			reviewer_json['fav_category'] = 0
+
+
 		writing_reviewer_file_pointer = io.create_file(reviewer_filepath)
 		io.write_line(writing_reviewer_file_pointer, json.dumps(reviewer_json))
 		writing_reviewer_file_pointer.close()
@@ -228,6 +282,7 @@ def get_reviewer_details(tmp_category_dir, category, reviewerID, asin, pos_senti
 		product_json = get_product_json(asin)
 		reviewer_json = {}
 		reviewer_json['#_reviews'] = 1
+		reviewer_json['#_products'] = 1
 		reviewer_json['#_+ve_reviews'], reviewer_json['#_-ve_reviews'] = pos_senti, neg_senti
 		reviewer_json['total_reacted'] = total_reacted
 		reviewer_json['helpfulness'] = helpfulness
@@ -237,9 +292,13 @@ def get_reviewer_details(tmp_category_dir, category, reviewerID, asin, pos_senti
 		reviewer_json['engaged_time'] = 0
 		reviewer_json['buy_again'] = 0
 		reviewer_json['reviews'] = {asin: {'#_time': 1, 'category': category, 'subcategory': subcategory, 'brand': brand}}
-		reviewer_json['fav_category'] = category
-		reviewer_json['fav_subcategory'] = subcategory
-		reviewer_json['fav_brand'] = brand
+		reviewer_json['fav_brand_name'] = brand
+		reviewer_json['fav_subcategory_name'] = subcategory
+		reviewer_json['fav_category_name'] = category
+		reviewer_json['#_related_bought'], reviewer_json['#_related_brands_fav'], reviewer_json['#_related_subcategory_fav'], reviewer_json['#_related_category_fav'] = get_related_match(related, [asin], reviewer_json['fav_brand_name'], reviewer_json['fav_subcategory_name'], reviewer_json['fav_category_name'])
+		reviewer_json['fav_brand'] = 1
+		reviewer_json['fav_subcategory'] = 1
+		reviewer_json['fav_category'] = 1
 		reviewer_json['#_products_related'] = product_json['#_products_related']
 		reviewer_json['also_bought_influential'], reviewer_json['also_viewed_influential'], reviewer_json['bought_together_influential'] = product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential']
 		
@@ -647,6 +706,9 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti,
 		product_json['price'] = price_scale
 		product_json['first_purchase'] = [year, month, date]
 		product_json['engaged_time'] = 0
+		product_json['brand'] = brand
+		product_json['subcategory'] = subcategory
+		product_json['category'] = category
 		product_json['related'] = related
 		product_json['buy_again'] = 0
 		product_json['#_products_related'] = no_products_related(related)
@@ -823,7 +885,7 @@ def get_pickle_object(file_path):
 	with open(file_path, 'rb') as f:
 		return pickle.load(f)
 
-def write_csv(tmp_category_dir, asin, brand, subcategory, category, reviewerID):
+def get_json(tmp_category_dir, asin, brand, subcategory, category, reviewerID):
 	product_json = get_product_json(asin)
 	brand_json = get_brand_json(brand)
 	subcategory_json = get_subcategory_json(tmp_category_dir, category, subcategory)
@@ -831,7 +893,293 @@ def write_csv(tmp_category_dir, asin, brand, subcategory, category, reviewerID):
 	reviewer_json = get_reviewer_json(reviewerID)
 	return product_json, brand_json, subcategory_json, category_json, reviewer_json
 
-def get_json(paths, tmp_category_dir):
+def write_csv(csv_file_path, product_json, brand_json, subcategory_json, category_json, reviewer_json):
+	csv_file_pointer = io.append_file(csv_file_path)
+	
+	product_json['#_reviews']
+	product_json['#_+ve_reviews']
+	product_json['#_-ve_reviews']
+	product_json['total_reacted']
+	product_json['helpfulness']
+	product_json['rating']
+	product_json['price']
+	product_json['first_purchase']
+	product_json['engaged_time']
+	product_json['buy_again']
+	product_json['#_products_related']['also_bought']
+	product_json['#_products_related']['also_viewed']
+	product_json['#_products_related']['bought_together']
+	
+	product_json['also_bought_influential']['#_reviews']
+	product_json['also_bought_influential']['#_+ve_reviews']
+	product_json['also_bought_influential']['#_-ve_reviews']
+	product_json['also_bought_influential']['total_reacted']
+	product_json['also_bought_influential']['helpfulness']
+	product_json['also_bought_influential']['rating']
+	product_json['also_bought_influential']['price']
+	product_json['also_bought_influential']['engaged_time']
+	product_json['also_bought_influential']['buy_again']
+	product_json['also_bought_influential']['#_products_related']['also_bought']
+	product_json['also_bought_influential']['#_products_related']['also_viewed']
+	product_json['also_bought_influential']['#_products_related']['bought_together']
+
+	product_json['also_viewed_influential']['#_reviews']
+	product_json['also_viewed_influential']['#_+ve_reviews']
+	product_json['also_viewed_influential']['#_-ve_reviews']
+	product_json['also_viewed_influential']['total_reacted']
+	product_json['also_viewed_influential']['helpfulness']
+	product_json['also_viewed_influential']['rating']
+	product_json['also_viewed_influential']['price']
+	product_json['also_viewed_influential']['engaged_time']
+	product_json['also_viewed_influential']['buy_again']
+	product_json['also_viewed_influential']['#_products_related']['also_bought']
+	product_json['also_viewed_influential']['#_products_related']['also_viewed']
+	product_json['also_viewed_influential']['#_products_related']['bought_together']
+		
+
+	product_json['bought_together_influential']['#_reviews']
+	product_json['bought_together_influential']['#_+ve_reviews']
+	product_json['bought_together_influential']['#_-ve_reviews']
+	product_json['bought_together_influential']['total_reacted']
+	product_json['bought_together_influential']['helpfulness']
+	product_json['bought_together_influential']['rating']
+	product_json['bought_together_influential']['price']
+	product_json['bought_together_influential']['engaged_time']
+	product_json['bought_together_influential']['buy_again']
+	product_json['bought_together_influential']['#_products_related']['also_bought']
+	product_json['bought_together_influential']['#_products_related']['also_viewed']
+	product_json['bought_together_influential']['#_products_related']['bought_together']
+
+	brand_json['#_reviews']
+	brand_json['#_products']
+	brand_json['#_+ve_reviews']
+	brand_json['#_-ve_reviews']
+	brand_json['total_reacted']
+	brand_json['helpfulness']
+	brand_json['rating']
+	brand_json['price']
+	brand_json['first_purchase']
+	brand_json['engaged_time']
+	brand_json['buy_again']
+	brand_json['#_products_related']['also_bought']
+	brand_json['#_products_related']['also_viewed']
+	brand_json['#_products_related']['bought_together']
+
+	brand_json['also_bought_influential']['#_reviews']
+	brand_json['also_bought_influential']['#_+ve_reviews']
+	brand_json['also_bought_influential']['#_-ve_reviews']
+	brand_json['also_bought_influential']['total_reacted']
+	brand_json['also_bought_influential']['helpfulness']
+	brand_json['also_bought_influential']['rating']
+	brand_json['also_bought_influential']['price']
+	brand_json['also_bought_influential']['engaged_time']
+	brand_json['also_bought_influential']['buy_again']
+	brand_json['also_bought_influential']['#_products_related']['also_bought']
+	brand_json['also_bought_influential']['#_products_related']['also_viewed']
+	brand_json['also_bought_influential']['#_products_related']['bought_together']
+
+	brand_json['also_viewed_influential']['#_reviews']
+	brand_json['also_viewed_influential']['#_+ve_reviews']
+	brand_json['also_viewed_influential']['#_-ve_reviews']
+	brand_json['also_viewed_influential']['total_reacted']
+	brand_json['also_viewed_influential']['helpfulness']
+	brand_json['also_viewed_influential']['rating']
+	brand_json['also_viewed_influential']['price']
+	brand_json['also_viewed_influential']['engaged_time']
+	brand_json['also_viewed_influential']['buy_again']
+	brand_json['also_viewed_influential']['#_products_related']['also_bought']
+	brand_json['also_viewed_influential']['#_products_related']['also_viewed']
+	brand_json['also_viewed_influential']['#_products_related']['bought_together']
+		
+
+	brand_json['bought_together_influential']['#_reviews']
+	brand_json['bought_together_influential']['#_+ve_reviews']
+	brand_json['bought_together_influential']['#_-ve_reviews']
+	brand_json['bought_together_influential']['total_reacted']
+	brand_json['bought_together_influential']['helpfulness']
+	brand_json['bought_together_influential']['rating']
+	brand_json['bought_together_influential']['price']
+	brand_json['bought_together_influential']['engaged_time']
+	brand_json['bought_together_influential']['buy_again']
+	brand_json['bought_together_influential']['#_products_related']['also_bought']
+	brand_json['bought_together_influential']['#_products_related']['also_viewed']
+	brand_json['bought_together_influential']['#_products_related']['bought_together']
+
+	subcategory_json['#_reviews']
+	subcategory_json['#_products']
+	subcategory_json['#_+ve_reviews']
+	subcategory_json['#_-ve_reviews']
+	subcategory_json['total_reacted']
+	subcategory_json['helpfulness']
+	subcategory_json['rating']
+	subcategory_json['price']
+	subcategory_json['first_purchase']
+	subcategory_json['engaged_time']
+	subcategory_json['buy_again']
+	subcategory_json['#_products_related']['also_bought']
+	subcategory_json['#_products_related']['also_viewed']
+	subcategory_json['#_products_related']['bought_together']
+
+	subcategory_json['also_bought_influential']['#_reviews']
+	subcategory_json['also_bought_influential']['#_+ve_reviews']
+	subcategory_json['also_bought_influential']['#_-ve_reviews']
+	subcategory_json['also_bought_influential']['total_reacted']
+	subcategory_json['also_bought_influential']['helpfulness']
+	subcategory_json['also_bought_influential']['rating']
+	subcategory_json['also_bought_influential']['price']
+	subcategory_json['also_bought_influential']['engaged_time']
+	subcategory_json['also_bought_influential']['buy_again']
+	subcategory_json['also_bought_influential']['#_products_related']['also_bought']
+	subcategory_json['also_bought_influential']['#_products_related']['also_viewed']
+	subcategory_json['also_bought_influential']['#_products_related']['bought_together']
+
+	subcategory_json['also_viewed_influential']['#_reviews']
+	subcategory_json['also_viewed_influential']['#_+ve_reviews']
+	subcategory_json['also_viewed_influential']['#_-ve_reviews']
+	subcategory_json['also_viewed_influential']['total_reacted']
+	subcategory_json['also_viewed_influential']['helpfulness']
+	subcategory_json['also_viewed_influential']['rating']
+	subcategory_json['also_viewed_influential']['price']
+	subcategory_json['also_viewed_influential']['engaged_time']
+	subcategory_json['also_viewed_influential']['buy_again']
+	subcategory_json['also_viewed_influential']['#_products_related']['also_bought']
+	subcategory_json['also_viewed_influential']['#_products_related']['also_viewed']
+	subcategory_json['also_viewed_influential']['#_products_related']['bought_together']
+		
+
+	subcategory_json['bought_together_influential']['#_reviews']
+	subcategory_json['bought_together_influential']['#_+ve_reviews']
+	subcategory_json['bought_together_influential']['#_-ve_reviews']
+	subcategory_json['bought_together_influential']['total_reacted']
+	subcategory_json['bought_together_influential']['helpfulness']
+	subcategory_json['bought_together_influential']['rating']
+	subcategory_json['bought_together_influential']['price']
+	subcategory_json['bought_together_influential']['engaged_time']
+	subcategory_json['bought_together_influential']['buy_again']
+	subcategory_json['bought_together_influential']['#_products_related']['also_bought']
+	subcategory_json['bought_together_influential']['#_products_related']['also_viewed']
+	subcategory_json['bought_together_influential']['#_products_related']['bought_together']
+
+	category_json['#_reviews']
+	category_json['#_products']
+	category_json['#_+ve_reviews']
+	category_json['#_-ve_reviews']
+	category_json['total_reacted']
+	category_json['helpfulness']
+	category_json['rating']
+	category_json['price']
+	category_json['first_purchase']
+	category_json['engaged_time']
+	category_json['buy_again']
+	category_json['#_products_related']['also_bought']
+	category_json['#_products_related']['also_viewed']
+	category_json['#_products_related']['bought_together']
+
+	category_json['also_bought_influential']['#_reviews']
+	category_json['also_bought_influential']['#_+ve_reviews']
+	category_json['also_bought_influential']['#_-ve_reviews']
+	category_json['also_bought_influential']['total_reacted']
+	category_json['also_bought_influential']['helpfulness']
+	category_json['also_bought_influential']['rating']
+	category_json['also_bought_influential']['price']
+	category_json['also_bought_influential']['engaged_time']
+	category_json['also_bought_influential']['buy_again']
+	category_json['also_bought_influential']['#_products_related']['also_bought']
+	category_json['also_bought_influential']['#_products_related']['also_viewed']
+	category_json['also_bought_influential']['#_products_related']['bought_together']
+
+	category_json['also_viewed_influential']['#_reviews']
+	category_json['also_viewed_influential']['#_+ve_reviews']
+	category_json['also_viewed_influential']['#_-ve_reviews']
+	category_json['also_viewed_influential']['total_reacted']
+	category_json['also_viewed_influential']['helpfulness']
+	category_json['also_viewed_influential']['rating']
+	category_json['also_viewed_influential']['price']
+	category_json['also_viewed_influential']['engaged_time']
+	category_json['also_viewed_influential']['buy_again']
+	category_json['also_viewed_influential']['#_products_related']['also_bought']
+	category_json['also_viewed_influential']['#_products_related']['also_viewed']
+	category_json['also_viewed_influential']['#_products_related']['bought_together']
+		
+
+	category_json['bought_together_influential']['#_reviews']
+	category_json['bought_together_influential']['#_+ve_reviews']
+	category_json['bought_together_influential']['#_-ve_reviews']
+	category_json['bought_together_influential']['total_reacted']
+	category_json['bought_together_influential']['helpfulness']
+	category_json['bought_together_influential']['rating']
+	category_json['bought_together_influential']['price']
+	category_json['bought_together_influential']['engaged_time']
+	category_json['bought_together_influential']['buy_again']
+	category_json['bought_together_influential']['#_products_related']['also_bought']
+	category_json['bought_together_influential']['#_products_related']['also_viewed']
+	category_json['bought_together_influential']['#_products_related']['bought_together']
+
+	reviewer_json['#_reviews']
+	reviewer_json['#_products']
+	reviewer_json['#_+ve_reviews']
+	reviewer_json['#_-ve_reviews']
+	reviewer_json['total_reacted']
+	reviewer_json['helpfulness']
+	reviewer_json['rating']
+	reviewer_json['price']
+	reviewer_json['first_purchase']
+	reviewer_json['engaged_time']
+	reviewer_json['buy_again']
+	reviewer_json['fav_category']
+	reviewer_json['fav_subcategory']
+	reviewer_json['fav_brand']
+	reviewer_json['#_related_bought']
+	reviewer_json['#_related_brands_fav']
+	reviewer_json['#_related_subcategory_fav']
+	reviewer_json['#_related_category_fav']
+	reviewer_json['#_products_related']['also_bought']
+	reviewer_json['#_products_related']['also_viewed']
+	reviewer_json['#_products_related']['bought_together']
+
+	reviewer_json['also_bought_influential']['#_reviews']
+	reviewer_json['also_bought_influential']['#_+ve_reviews']
+	reviewer_json['also_bought_influential']['#_-ve_reviews']
+	reviewer_json['also_bought_influential']['total_reacted']
+	reviewer_json['also_bought_influential']['helpfulness']
+	reviewer_json['also_bought_influential']['rating']
+	reviewer_json['also_bought_influential']['price']
+	reviewer_json['also_bought_influential']['engaged_time']
+	reviewer_json['also_bought_influential']['buy_again']
+	reviewer_json['also_bought_influential']['#_products_related']['also_bought']
+	reviewer_json['also_bought_influential']['#_products_related']['also_viewed']
+	reviewer_json['also_bought_influential']['#_products_related']['bought_together']
+
+	reviewer_json['also_viewed_influential']['#_reviews']
+	reviewer_json['also_viewed_influential']['#_+ve_reviews']
+	reviewer_json['also_viewed_influential']['#_-ve_reviews']
+	reviewer_json['also_viewed_influential']['total_reacted']
+	reviewer_json['also_viewed_influential']['helpfulness']
+	reviewer_json['also_viewed_influential']['rating']
+	reviewer_json['also_viewed_influential']['price']
+	reviewer_json['also_viewed_influential']['engaged_time']
+	reviewer_json['also_viewed_influential']['buy_again']
+	reviewer_json['also_viewed_influential']['#_products_related']['also_bought']
+	reviewer_json['also_viewed_influential']['#_products_related']['also_viewed']
+	reviewer_json['also_viewed_influential']['#_products_related']['bought_together']
+	
+	reviewer_json['bought_together_influential']['#_reviews']
+	reviewer_json['bought_together_influential']['#_+ve_reviews']
+	reviewer_json['bought_together_influential']['#_-ve_reviews']
+	reviewer_json['bought_together_influential']['total_reacted']
+	reviewer_json['bought_together_influential']['helpfulness']
+	reviewer_json['bought_together_influential']['rating']
+	reviewer_json['bought_together_influential']['price']
+	reviewer_json['bought_together_influential']['engaged_time']
+	reviewer_json['bought_together_influential']['buy_again']
+	reviewer_json['bought_together_influential']['#_products_related']['also_bought']
+	reviewer_json['bought_together_influential']['#_products_related']['also_viewed']
+	reviewer_json['bought_together_influential']['#_products_related']['bought_together']
+
+def synch_data(paths, tmp_category_dir):
+	#change path
+	csv_file_path = '/media/dell/Seagate Expansion Drive/CE_paper/Implementation/tmp_data/dataset.csv'
+	
 	prev_category = ''
 	index = {}
 	index_file_pointer = None
@@ -885,6 +1233,7 @@ def get_json(paths, tmp_category_dir):
 						get_category_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price_scale, related, brand, categories)
 						get_reviewer_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price_scale, related, brand, categories)
 						product_json, brand_json, subcategory_json, category_json, reviewer_json = get_json(tmp_category_dir, asin, brand, subcategory, category, reviewerID)
+
 				else:
 					print('Till now reject')
 
