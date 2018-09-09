@@ -823,7 +823,15 @@ def get_pickle_object(file_path):
 	with open(file_path, 'rb') as f:
 		return pickle.load(f)
 
-def synch_data(paths, tmp_category_dir):
+def write_csv(tmp_category_dir, asin, brand, subcategory, category, reviewerID):
+	product_json = get_product_json(asin)
+	brand_json = get_brand_json(brand)
+	subcategory_json = get_subcategory_json(tmp_category_dir, category, subcategory)
+	category_json = get_category_json(tmp_category_dir, category)
+	reviewer_json = get_reviewer_json(reviewerID)
+	return product_json, brand_json, subcategory_json, category_json, reviewer_json
+
+def get_json(paths, tmp_category_dir):
 	prev_category = ''
 	index = {}
 	index_file_pointer = None
@@ -876,7 +884,7 @@ def synch_data(paths, tmp_category_dir):
 						get_subcategory_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price_scale, related, brand, categories)
 						get_category_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price_scale, related, brand, categories)
 						get_reviewer_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price_scale, related, brand, categories)
-						write_csv(asin, brand, subcategory, category, reviewerID)
+						product_json, brand_json, subcategory_json, category_json, reviewer_json = get_json(tmp_category_dir, asin, brand, subcategory, category, reviewerID)
 				else:
 					print('Till now reject')
 
