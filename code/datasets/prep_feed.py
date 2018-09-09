@@ -869,8 +869,14 @@ def synch_data(paths, tmp_category_dir):
 					date, month, year, day = unix_to_attributes(unixReviewTime)
 					pos_senti, neg_senti = get_sentiment_scale(sentiment)
 					price_scale = get_price_scale(price, category)
+					subcategory = '_'.join(categories[0][1:])
 					if len(categories[0]) > 1:
-						#call
+						get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price_scale, related, brand, categories)
+						get_brand_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price_scale, related, brand, categories)
+						get_subcategory_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price_scale, related, brand, categories)
+						get_category_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price_scale, related, brand, categories)
+						get_reviewer_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price_scale, related, brand, categories)
+						write_csv(asin, brand, subcategory, category, reviewerID)
 				else:
 					print('Till now reject')
 
