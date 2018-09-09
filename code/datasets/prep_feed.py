@@ -159,6 +159,7 @@ def prepare_r_b_s_c_influential_details(asin, also_bought, also_viewed, bought_t
 		influential_attributes[i]['rating'] -= mapping[i]['rating']
 		influential_attributes[i]['price'] -= mapping[i]['price']
 		influential_attributes[i]['engaged_time'] -= mapping[i]['engaged_time']
+		influential_attributes[i]['total_time'] -= mapping[i]['total_time']
 		influential_attributes[i]['buy_again'] -= mapping[i]['buy_again']
 		influential_attributes[i]['#_products_related']['also_bought'] -= mapping[i]['#_products_related']['also_bought']
 		influential_attributes[i]['#_products_related']['also_viewed'] -= mapping[i]['#_products_related']['also_viewed']
@@ -183,6 +184,7 @@ def get_r_b_s_c_influential_details(asin, also_bought, also_viewed, bought_toget
 		influential_attributes[i]['rating'] += mapping[i]['rating']
 		influential_attributes[i]['price'] += mapping[i]['price']
 		influential_attributes[i]['engaged_time'] += mapping[i]['engaged_time']
+		influential_attributes[i]['total_time'] += mapping[i]['total_time']
 		influential_attributes[i]['buy_again'] += mapping[i]['buy_again']
 		influential_attributes[i]['#_products_related']['also_bought'] += mapping[i]['#_products_related']['also_bought']
 		influential_attributes[i]['#_products_related']['also_viewed'] += mapping[i]['#_products_related']['also_viewed']
@@ -240,7 +242,8 @@ def get_reviewer_details(tmp_category_dir, category, reviewerID, asin, pos_senti
 		reviewer_json['helpfulness'] += helpfulness
 		reviewer_json['rating'] += rating
 		reviewer_json['price'] += price_scale
-		reviewer_json['engaged_time'] = unixtime.days_difference(reviewer_json['first_purchase'], [year, month, date]) - reviewer_json['engaged_time']
+		reviewer_json['total_time'] = unixtime.days_difference(reviewer_json['first_purchase'], [year, month, date])
+		reviewer_json['engaged_time'] = reviewer_json['total_time'] - reviewer_json['engaged_time']
 		
 		buy_again_value = buy_again(reviewer_json, asin)
 		reviewer_json['buy_again'] += buy_again_value
@@ -289,6 +292,7 @@ def get_reviewer_details(tmp_category_dir, category, reviewerID, asin, pos_senti
 		reviewer_json['rating'] = rating
 		reviewer_json['price'] = price_scale
 		reviewer_json['first_purchase'] = [year, month, date]
+		reviewer_json['total_time'] = 0
 		reviewer_json['engaged_time'] = 0
 		reviewer_json['buy_again'] = 0
 		reviewer_json['reviews'] = {asin: {'#_time': 1, 'category': category, 'subcategory': subcategory, 'brand': brand}}
@@ -323,7 +327,8 @@ def get_brand_details(tmp_category_dir, category, reviewerID, asin, pos_senti, n
 		brand_json['total_reacted'] += total_reacted
 		brand_json['helpfulness'] += helpfulness
 		brand_json['rating'] += rating
-		brand_json['engaged_time'] = unixtime.days_difference(brand_json['first_purchase'], [year, month, date]) - brand_json['engaged_time']
+		brand_json['total_time'] = unixtime.days_difference(brand_json['first_purchase'], [year, month, date])
+		brand_json['engaged_time'] = brand_json['total_time'] - brand_json['engaged_time']
 		if asin not in brand_json['products']:
 			brand_json['#_products'] += 1
 			brand_json['products'].append(asin)
@@ -349,6 +354,7 @@ def get_brand_details(tmp_category_dir, category, reviewerID, asin, pos_senti, n
 		brand_json['rating'] = rating
 		brand_json['price'] = price_scale
 		brand_json['first_purchase'] = [year, month, date]
+		brand_json['total_time'] = 0
 		brand_json['engaged_time'] = 0
 		brand_json['products'] = [asin]
 		brand_json['#_products_related'] = product_json['#_products_related']
@@ -378,7 +384,8 @@ def get_subcategory_details(tmp_category_dir, category, reviewerID, asin, pos_se
 		subcategory_json['total_reacted'] += total_reacted
 		subcategory_json['helpfulness'] += helpfulness
 		subcategory_json['rating'] += rating
-		subcategory_json['engaged_time'] = unixtime.days_difference(subcategory_json['first_purchase'], [year, month, date]) - subcategory_json['engaged_time']
+		subcategory_json['total_time'] = unixtime.days_difference(subcategory_json['first_purchase'], [year, month, date])
+		subcategory_json['engaged_time'] = subcategory_json['total_time'] - subcategory_json['engaged_time']
 		if asin not in subcategory_json['products']:
 			subcategory_json['#_products'] += 1
 			subcategory_json['products'].append(asin)
@@ -404,6 +411,7 @@ def get_subcategory_details(tmp_category_dir, category, reviewerID, asin, pos_se
 		subcategory_json['rating'] = rating
 		subcategory_json['price'] = price_scale
 		subcategory_json['first_purchase'] = [year, month, date]
+		subcategory_json['total_time'] = 0
 		subcategory_json['engaged_time'] = 0
 		subcategory_json['products'] = [asin]
 		subcategory_json['#_products_related'] = product_json['#_products_related']
@@ -433,7 +441,8 @@ def get_category_details(tmp_category_dir, category, reviewerID, asin, pos_senti
 		category_json['total_reacted'] += total_reacted
 		category_json['helpfulness'] += helpfulness
 		category_json['rating'] += rating
-		category_json['engaged_time'] = unixtime.days_difference(category_json['first_purchase'], [year, month, date]) - category_json['engaged_time']
+		category_json['total_time'] = unixtime.days_difference(category_json['first_purchase'], [year, month, date])
+		category_json['engaged_time'] = category_json['total_time'] - category_json['engaged_time']
 		if asin not in category_json['products']:
 			category_json['#_products'] += 1
 			category_json['products'].append(asin)
@@ -459,6 +468,7 @@ def get_category_details(tmp_category_dir, category, reviewerID, asin, pos_senti
 		category_json['rating'] = rating
 		category_json['price'] = price_scale
 		category_json['first_purchase'] = [year, month, date]
+		category_json['total_time'] = 0
 		category_json['engaged_time'] = 0
 		category_json['products'] = [asin]
 		category_json['#_products_related'] = product_json['#_products_related']
@@ -528,6 +538,7 @@ def get_influential_attributes(available_products):
 	influential_attributes['rating'] = 0
 	influential_attributes['price'] = 0
 	influential_attributes['engaged_time'] = 0
+	influential_attributes['total_time'] = 0
 	influential_attributes['buy_again'] = 0
 	influential_attributes['#_products_related'] = {}
 	influential_attributes['#_products_related']['also_bought'] = 0
@@ -548,6 +559,7 @@ def get_influential_attributes(available_products):
 		influential_attributes['rating'] += product_json['rating']
 		influential_attributes['price'] += product_json['price']
 		influential_attributes['engaged_time'] += product_json['engaged_time']
+		influential_attributes['total_time'] += product_json['total_time']
 		influential_attributes['buy_again'] += product_json['buy_again']
 		influential_attributes['#_products_related']['also_bought'] += product_json['#_products_related']['also_bought']
 		influential_attributes['#_products_related']['also_viewed'] += product_json['#_products_related']['also_viewed']
@@ -642,7 +654,8 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti,
 		product_json['total_reacted'] += total_reacted
 		product_json['helpfulness'] += helpfulness
 		product_json['rating'] += rating
-		product_json['engaged_time'] = unixtime.days_difference(product_json['first_purchase'], [year, month, date]) - product_json['engaged_time']
+		product_json['total_time'] = unixtime.days_difference(product_json['first_purchase'], [year, month, date])
+		product_json['engaged_time'] = product_json['total_time'] - product_json['engaged_time']
 		
 		if reviewerID in global_data['available_reviewers']:
 			repeated_purchase_value = repeated_purchase(tmp_category_dir, category, reviewerID, asin)
@@ -705,6 +718,7 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti,
 		product_json['rating'] = rating
 		product_json['price'] = price_scale
 		product_json['first_purchase'] = [year, month, date]
+		product_json['total_time'] = 0
 		product_json['engaged_time'] = 0
 		product_json['brand'] = brand
 		product_json['subcategory'] = subcategory
@@ -893,95 +907,122 @@ def get_json(tmp_category_dir, asin, brand, subcategory, category, reviewerID):
 	reviewer_json = get_reviewer_json(reviewerID)
 	return product_json, brand_json, subcategory_json, category_json, reviewer_json
 
-def write_csv(tmp_category_dir, csv_file_path, product_json, brand_json, subcategory_json, category_json, reviewer_json):
+def write_csv(tmp_category_dir, csv_file_path, product_json, brand_json, subcategory_json, category_json, reviewer_json, total_reacted, helpfulness, rating, date, month, year, day, price_scale, sentiment):
 	csv_file_pointer = io.append_file(csv_file_path)
+	csv_list = []
 
-	product_json['#_reviews']
-	product_json['#_+ve_reviews']
-	product_json['#_-ve_reviews']
-	product_json['helpfulness']
-	product_json['total_reacted']
-	product_json['rating']
-	product_json['price']
-	product_json['first_purchase']
-	product_json['engaged_time']
-	product_json['buy_again']
-	product_json['#_products_related']['also_bought']
-	product_json['#_products_related']['also_viewed']
-	product_json['#_products_related']['bought_together']
+	csv_list.append(str(sentiment))
+	if total_reacted == 0:
+		csv_list.append(str(0))
+	else:
+		csv_list.append(str(helpfulness/total_reacted))
+	csv_list.append(str(rating))
+	csv_list.append(str(date))
+	csv_list.append(str(month))
+	csv_list.append(str(year))
+	csv_list.append(str(day))
+	csv_list.append(str(price_scale))
 
-	product_json['also_bought_influential']['#_reviews']
-	product_json['also_bought_influential']['#_+ve_reviews']
-	product_json['also_bought_influential']['#_-ve_reviews']
-	product_json['also_bought_influential']['helpfulness']
-	product_json['also_bought_influential']['total_reacted']
-	product_json['also_bought_influential']['rating']
-	product_json['also_bought_influential']['price']
-	product_json['also_bought_influential']['engaged_time']
-	product_json['also_bought_influential']['buy_again']
-	product_json['also_bought_influential']['#_products_related']['also_bought']
-	product_json['also_bought_influential']['#_products_related']['also_viewed']
-	product_json['also_bought_influential']['#_products_related']['bought_together']
+	csv_list.append(str(product_json['#_reviews']))
+	csv_list.append(str(product_json['#_+ve_reviews']))
+	csv_list.append(str(product_json['#_-ve_reviews']))
+	if product_json['total_reacted'] == 0:
+		csv_list.append(str(0))
+	else:
+		csv_list.append(str(product_json['helpfulness']/product_json['total_reacted']))
+	csv_list.append(str(product_json['rating']))
+	csv_list.append(str(product_json['price']))
+	csv_list.append(str(product_json['total_time']))
+	csv_list.append(str(product_json['engaged_time']))
+	csv_list.append(str(product_json['buy_again']))
+	csv_list.append(str(product_json['#_products_related']['also_bought']))
+	csv_list.append(str(product_json['#_products_related']['also_viewed']))
+	csv_list.append(str(product_json['#_products_related']['bought_together']))
 
-	product_json['also_viewed_influential']['#_reviews']
-	product_json['also_viewed_influential']['#_+ve_reviews']
-	product_json['also_viewed_influential']['#_-ve_reviews']
-	product_json['also_viewed_influential']['helpfulness']
-	product_json['also_viewed_influential']['total_reacted']
-	product_json['also_viewed_influential']['rating']
-	product_json['also_viewed_influential']['price']
-	product_json['also_viewed_influential']['engaged_time']
-	product_json['also_viewed_influential']['buy_again']
-	product_json['also_viewed_influential']['#_products_related']['also_bought']
-	product_json['also_viewed_influential']['#_products_related']['also_viewed']
-	product_json['also_viewed_influential']['#_products_related']['bought_together']
+	csv_list.append(str(product_json['also_bought_influential']['#_reviews']))
+	csv_list.append(str(product_json['also_bought_influential']['#_+ve_reviews']))
+	csv_list.append(str(product_json['also_bought_influential']['#_-ve_reviews']))
+	if product_json['also_bought_influential']['total_reacted'] == 0:
+		csv_list.append(str(0))
+	else:
+		csv_list.append(str(product_json['also_bought_influential']['helpfulness'] / product_json['also_bought_influential']['total_reacted']))
+	csv_list.append(str(product_json['also_bought_influential']['rating']))
+	csv_list.append(str(product_json['also_bought_influential']['price']))
+	csv_list.append(str(product_json['also_bought_influential']['engaged_time']))
+	csv_list.append(str(product_json['also_bought_influential']['buy_again']))
+	csv_list.append(str(product_json['also_bought_influential']['#_products_related']['also_bought']))
+	csv_list.append(str(product_json['also_bought_influential']['#_products_related']['also_viewed']))
+	csv_list.append(str(product_json['also_bought_influential']['#_products_related']['bought_together']))
 
-	product_json['bought_together_influential']['#_reviews']
-	product_json['bought_together_influential']['#_+ve_reviews']
-	product_json['bought_together_influential']['#_-ve_reviews']
-	product_json['bought_together_influential']['helpfulness']
-	product_json['bought_together_influential']['total_reacted']
-	product_json['bought_together_influential']['rating']
-	product_json['bought_together_influential']['price']
-	product_json['bought_together_influential']['engaged_time']
-	product_json['bought_together_influential']['buy_again']
-	product_json['bought_together_influential']['#_products_related']['also_bought']
-	product_json['bought_together_influential']['#_products_related']['also_viewed']
-	product_json['bought_together_influential']['#_products_related']['bought_together']
+	csv_list.append(str(product_json['also_viewed_influential']['#_reviews']))
+	csv_list.append(str(product_json['also_viewed_influential']['#_+ve_reviews']))
+	csv_list.append(str(product_json['also_viewed_influential']['#_-ve_reviews']))
+	if product_json['also_viewed_influential']['total_reacted'] == 0:
+		csv_list.append(str(0))
+	else:
+		csv_list.append(str(product_json['also_viewed_influential']['helpfulness'] / product_json['also_viewed_influential']['total_reacted']))
+	csv_list.append(str(product_json['also_viewed_influential']['rating']))
+	csv_list.append(str(product_json['also_viewed_influential']['price']))
+	csv_list.append(str(product_json['also_viewed_influential']['engaged_time']))
+	csv_list.append(str(product_json['also_viewed_influential']['buy_again']))
+	csv_list.append(str(product_json['also_viewed_influential']['#_products_related']['also_bought']))
+	csv_list.append(str(product_json['also_viewed_influential']['#_products_related']['also_viewed']))
+	csv_list.append(str(product_json['also_viewed_influential']['#_products_related']['bought_together']))
 
-	brand_json['#_reviews']
-	brand_json['#_products']
-	brand_json['#_+ve_reviews']
-	brand_json['#_-ve_reviews']
-	brand_json['helpfulness']
-	brand_json['total_reacted']
-	brand_json['rating']
-	brand_json['price']
-	brand_json['first_purchase']
-	brand_json['engaged_time']
-	brand_json['buy_again']
-	brand_json['#_products_related']['also_bought']
-	brand_json['#_products_related']['also_viewed']
-	brand_json['#_products_related']['bought_together']
+	csv_list.append(str(product_json['bought_together_influential']['#_reviews']))
+	csv_list.append(str(product_json['bought_together_influential']['#_+ve_reviews']))
+	csv_list.append(str(product_json['bought_together_influential']['#_-ve_reviews']))
+	if product_json['bought_together_influential']['total_reacted'] == 0:
+		csv_list.append(str(0))
+	else:
+		csv_list.append(str(product_json['bought_together_influential']['helpfulness'] / product_json['bought_together_influential']['total_reacted']))
+	csv_list.append(str(product_json['bought_together_influential']['rating']))
+	csv_list.append(str(product_json['bought_together_influential']['price']))
+	csv_list.append(str(product_json['bought_together_influential']['engaged_time']))
+	csv_list.append(str(product_json['bought_together_influential']['buy_again']))
+	csv_list.append(str(product_json['bought_together_influential']['#_products_related']['also_bought']))
+	csv_list.append(str(product_json['bought_together_influential']['#_products_related']['also_viewed']))
+	csv_list.append(str(product_json['bought_together_influential']['#_products_related']['bought_together']))
 
-	brand_json['also_bought_influential']['#_reviews']
-	brand_json['also_bought_influential']['#_+ve_reviews']
-	brand_json['also_bought_influential']['#_-ve_reviews']
-	brand_json['also_bought_influential']['helpfulness']
-	brand_json['also_bought_influential']['total_reacted']
-	brand_json['also_bought_influential']['rating']
-	brand_json['also_bought_influential']['price']
-	brand_json['also_bought_influential']['engaged_time']
-	brand_json['also_bought_influential']['buy_again']
-	brand_json['also_bought_influential']['#_products_related']['also_bought']
-	brand_json['also_bought_influential']['#_products_related']['also_viewed']
-	brand_json['also_bought_influential']['#_products_related']['bought_together']
+	csv_list.append(str(brand_json['#_reviews']))
+	csv_list.append(str(brand_json['#_products']))
+	csv_list.append(str(brand_json['#_+ve_reviews']))
+	csv_list.append(str(brand_json['#_-ve_reviews']))
+	if brand_json['total_reacted'] == 0:
+		csv_list.append(str(0))
+	else:
+		csv_list.append(str(brand_json['helpfulness'] / brand_json['total_reacted']))
+	csv_list.append(str(brand_json['rating']))
+	csv_list.append(str(brand_json['price']))
+	csv_list.append(str(brand_json['total_time']))
+	csv_list.append(str(brand_json['engaged_time']))
+	csv_list.append(str(brand_json['buy_again']))
+	csv_list.append(str(brand_json['#_products_related']['also_bought']))
+	csv_list.append(str(brand_json['#_products_related']['also_viewed']))
+	csv_list.append(str(brand_json['#_products_related']['bought_together']))
 
-	brand_json['also_viewed_influential']['#_reviews']
-	brand_json['also_viewed_influential']['#_+ve_reviews']
-	brand_json['also_viewed_influential']['#_-ve_reviews']
-	brand_json['also_viewed_influential']['helpfulness']
-	brand_json['also_viewed_influential']['total_reacted']
+	csv_list.append(str(brand_json['also_bought_influential']['#_reviews']))
+	csv_list.append(str(brand_json['also_bought_influential']['#_+ve_reviews']))
+	csv_list.append(str(brand_json['also_bought_influential']['#_-ve_reviews']))
+	if brand_json['also_bought_influential']['total_reacted'] == 0:
+		csv_list.append(str(0))
+	else:
+		csv_list.append(str(brand_json['also_bought_influential']['helpfulness'] / brand_json['also_bought_influential']['total_reacted']))
+	csv_list.append(str(brand_json['also_bought_influential']['rating']))
+	csv_list.append(str(brand_json['also_bought_influential']['price']))
+	csv_list.append(str(brand_json['also_bought_influential']['engaged_time']))
+	csv_list.append(str(brand_json['also_bought_influential']['buy_again']))
+	csv_list.append(str(brand_json['also_bought_influential']['#_products_related']['also_bought']))
+	csv_list.append(str(brand_json['also_bought_influential']['#_products_related']['also_viewed']))
+	csv_list.append(str(brand_json['also_bought_influential']['#_products_related']['bought_together']))
+
+	csv_list.append(str(brand_json['also_viewed_influential']['#_reviews']))
+	csv_list.append(str(brand_json['also_viewed_influential']['#_+ve_reviews']))
+	csv_list.append(str(brand_json['also_viewed_influential']['#_-ve_reviews']))
+	if brand_json['also_viewed_influential']['total_reacted'] == 0:
+		csv_list.append(str(0))
+	else:
+		csv_list.append(str(brand_json['also_viewed_influential']['helpfulness'] / brand_json['also_viewed_influential']['total_reacted']))
 	brand_json['also_viewed_influential']['rating']
 	brand_json['also_viewed_influential']['price']
 	brand_json['also_viewed_influential']['engaged_time']
@@ -1011,7 +1052,7 @@ def write_csv(tmp_category_dir, csv_file_path, product_json, brand_json, subcate
 	subcategory_json['total_reacted']
 	subcategory_json['rating']
 	subcategory_json['price']
-	subcategory_json['first_purchase']
+	subcategory_json['total_time']
 	subcategory_json['engaged_time']
 	subcategory_json['buy_again']
 	subcategory_json['#_products_related']['also_bought']
@@ -1065,7 +1106,7 @@ def write_csv(tmp_category_dir, csv_file_path, product_json, brand_json, subcate
 	category_json['total_reacted']
 	category_json['rating']
 	category_json['price']
-	category_json['first_purchase']
+	category_json['total_time']
 	category_json['engaged_time']
 	category_json['buy_again']
 	category_json['#_products_related']['also_bought']
@@ -1119,7 +1160,7 @@ def write_csv(tmp_category_dir, csv_file_path, product_json, brand_json, subcate
 	reviewer_json['total_reacted']
 	reviewer_json['rating']
 	reviewer_json['price']
-	reviewer_json['first_purchase']
+	reviewer_json['total_time']
 	reviewer_json['engaged_time']
 	reviewer_json['buy_again']
 	
@@ -1189,7 +1230,7 @@ def write_csv(tmp_category_dir, csv_file_path, product_json, brand_json, subcate
 	reviewer_fav_brand_json['total_reacted']
 	reviewer_fav_brand_json['rating']
 	reviewer_fav_brand_json['price']
-	reviewer_fav_brand_json['first_purchase']
+	reviewer_fav_brand_json['total_time']
 	reviewer_fav_brand_json['engaged_time']
 	reviewer_fav_brand_json['buy_again']
 	reviewer_fav_brand_json['#_products_related']['also_bought']
@@ -1243,7 +1284,7 @@ def write_csv(tmp_category_dir, csv_file_path, product_json, brand_json, subcate
 	reviewer_fav_subcategory_json['total_reacted']
 	reviewer_fav_subcategory_json['rating']
 	reviewer_fav_subcategory_json['price']
-	reviewer_fav_subcategory_json['first_purchase']
+	reviewer_fav_subcategory_json['total_time']
 	reviewer_fav_subcategory_json['engaged_time']
 	reviewer_fav_subcategory_json['buy_again']
 	reviewer_fav_subcategory_json['#_products_related']['also_bought']
@@ -1297,7 +1338,7 @@ def write_csv(tmp_category_dir, csv_file_path, product_json, brand_json, subcate
 	reviewer_fav_category_json['total_reacted']
 	reviewer_fav_category_json['rating']
 	reviewer_fav_category_json['price']
-	reviewer_fav_category_json['first_purchase']
+	reviewer_fav_category_json['total_time']
 	reviewer_fav_category_json['engaged_time']
 	reviewer_fav_category_json['buy_again']
 	reviewer_fav_category_json['#_products_related']['also_bought']
@@ -1386,7 +1427,7 @@ def synch_data(paths, tmp_category_dir):
 				product_json = meta[asin]
 				merged_json = dict(json_line, **product_json)
 				FLAG, reviewerID, asin, helpful, reviewText, overall, summary, unixReviewTime, title, price, related, salesRank, brand, categories = get_attributes(merged_json)
-				
+
 				if FLAG:
 					sentiment, total_reacted, helpfulness, rating = get_review_details(helpful, reviewText, overall)
 					date, month, year, day = unix_to_attributes(unixReviewTime)
