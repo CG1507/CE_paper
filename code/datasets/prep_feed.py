@@ -227,8 +227,6 @@ def get_reviewer_details(tmp_category_dir, category, reviewerID, asin, pos_senti
 	global global_data
 
 	subcategory = '_'.join(categories[0][1:])
-	if '/' in subcategory:
-		subcategory = subcategory.replace('/', '')
 	reviewer_filepath = tmp_category_dir + category + '/reviewers/' + reviewerID + '.json'
 
 	if reviewerID in global_data['available_reviewers']:
