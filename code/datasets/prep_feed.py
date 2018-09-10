@@ -227,6 +227,8 @@ def get_reviewer_details(tmp_category_dir, category, reviewerID, asin, pos_senti
 	global global_data
 
 	subcategory = '_'.join(categories[0][1:])
+	if '/' in subcategory:
+		subcategory = subcategory.replace('/', '')
 	reviewer_filepath = tmp_category_dir + category + '/reviewers/' + reviewerID + '.json'
 
 	if reviewerID in global_data['available_reviewers']:
@@ -374,6 +376,8 @@ def get_subcategory_details(tmp_category_dir, category, reviewerID, asin, pos_se
 	global global_data
 
 	subcategory = '_'.join(categories[0][1:])
+	if '/' in subcategory:
+		subcategory = subcategory.replace('/', '')
 	subcategory_filepath = tmp_category_dir + category + '/subcategories/' + subcategory + '.json'
 
 	if subcategory in global_data['available_subcategories']:
@@ -1505,14 +1509,25 @@ def synch_data(paths, tmp_category_dir):
 			merged_json = dict(json_line, **product_json)
 			FLAG, reviewerID, asin, helpful, reviewText, overall, summary, unixReviewTime, title, price, related, salesRank, brand, categories = get_attributes(merged_json)
 			
+			subcategory = '_'.join(categories[0][1:])
+			if '/' in subcategory:
+				subcategory = subcategory.replace('/', '')
+
+			if '/' in category:
+				category = category.replace('/', '')
+
+			if '/' in brand:
+				brand = brand.replace('/', '')
+
+			if '/' in reviewerID:
+				reviewerID = reviewerID.replace('/', '')
+
 			if FLAG:
 				sentiment, total_reacted, helpfulness, rating = get_review_details(helpful, reviewText, overall)
 				date, month, year, day = unix_to_attributes(unixReviewTime)
 				pos_senti, neg_senti = get_sentiment_scale(sentiment)
 				price_scale = get_price_scale(price, category)
-				subcategory = '_'.join(categories[0][1:])
-				if '/' in subcategory:
-					subcategory = subcategory.replace('/', '')
+
 				if len(categories[0]) > 1:
 					get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price_scale, related, brand, categories)
 					get_brand_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price_scale, related, brand, categories)
