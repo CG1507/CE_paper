@@ -113,6 +113,7 @@ def add_review_to_reviewer(reviewer_json, asin, brand, subcategory, category):
 	if asin in reviewer_json['reviews']:
 		reviewer_json['reviews'][asin]['#_time'] += 1
 	else:
+		reviewer_json['reviews'][asin] = {}
 		reviewer_json['reviews'][asin]['#_time'] = 1
 		reviewer_json['reviews'][asin]['brand'] = brand
 		reviewer_json['reviews'][asin]['subcategory'] = subcategory
@@ -200,7 +201,7 @@ def get_related_match(related, products, fav_brand, fav_subcategory, fav_categor
 	related_fav['subcategory'] = 0
 	related_fav['category'] = 0
 	new_related = []
-	for r in related['also_viewed']
+	for r in related['also_viewed']:
 		if r in global_data['available_products']:
 			new_related.append(r)
 
@@ -227,6 +228,8 @@ def get_reviewer_details(tmp_category_dir, category, reviewerID, asin, pos_senti
 	global global_data
 
 	subcategory = '_'.join(categories[0][1:])
+	if '/' in subcategory:
+		subcategory = subcategory.replace('/', '')
 	reviewer_filepath = tmp_category_dir + category + '/reviewers/' + reviewerID + '.json'
 
 	if reviewerID in global_data['available_reviewers']:
@@ -329,13 +332,18 @@ def get_brand_details(tmp_category_dir, category, reviewerID, asin, pos_senti, n
 		brand_json['rating'] += rating
 		brand_json['total_time'] = unixtime.days_difference(brand_json['first_purchase'], [year, month, date])
 		brand_json['engaged_time'] = brand_json['total_time'] - brand_json['engaged_time']
+		if reviewerID in global_data['available_reviewers']:
+			repeated_purchase_value = repeated_purchase(tmp_category_dir, category, reviewerID, asin)
+		else:
+			repeated_purchase_value = 0
+		brand_json['buy_again'] += repeated_purchase_value
 		if asin not in brand_json['products']:
 			brand_json['#_products'] += 1
 			brand_json['products'].append(asin)
 			brand_json['price'] += price_scale
 
 		brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential'] = get_r_b_s_c_influential_details(asin, brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential'])
-		brand_json['#_products_related'] = r_b_s_c_no_products_related(asin, brand_json['#_products_related']['also_bought'], brand_json['#_products_related']['also_viewed']. brand_json['#_products_related']['bought_together'])
+		brand_json['#_products_related'] = r_b_s_c_no_products_related(asin, brand_json['#_products_related']['also_bought'], brand_json['#_products_related']['also_viewed'], brand_json['#_products_related']['bought_together'])
 	
 		writing_brand_file_pointer = io.create_file(brand_filepath)
 		io.write_line(writing_brand_file_pointer, json.dumps(brand_json))
@@ -357,6 +365,7 @@ def get_brand_details(tmp_category_dir, category, reviewerID, asin, pos_senti, n
 		brand_json['total_time'] = 0
 		brand_json['engaged_time'] = 0
 		brand_json['products'] = [asin]
+		brand_json['buy_again'] = 0
 		brand_json['#_products_related'] = product_json['#_products_related']
 		brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential'] = product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential']
 		
@@ -368,6 +377,8 @@ def get_subcategory_details(tmp_category_dir, category, reviewerID, asin, pos_se
 	global global_data
 
 	subcategory = '_'.join(categories[0][1:])
+	if '/' in subcategory:
+		subcategory = subcategory.replace('/', '')
 	subcategory_filepath = tmp_category_dir + category + '/subcategories/' + subcategory + '.json'
 
 	if subcategory in global_data['available_subcategories']:
@@ -386,13 +397,18 @@ def get_subcategory_details(tmp_category_dir, category, reviewerID, asin, pos_se
 		subcategory_json['rating'] += rating
 		subcategory_json['total_time'] = unixtime.days_difference(subcategory_json['first_purchase'], [year, month, date])
 		subcategory_json['engaged_time'] = subcategory_json['total_time'] - subcategory_json['engaged_time']
+		if reviewerID in global_data['available_reviewers']:
+			repeated_purchase_value = repeated_purchase(tmp_category_dir, category, reviewerID, asin)
+		else:
+			repeated_purchase_value = 0
+		subcategory_json['buy_again'] += repeated_purchase_value
 		if asin not in subcategory_json['products']:
 			subcategory_json['#_products'] += 1
 			subcategory_json['products'].append(asin)
 			subcategory_json['price'] += price_scale
 	
 		subcategory_json['also_bought_influential'], subcategory_json['also_viewed_influential'], subcategory_json['bought_together_influential'] = get_r_b_s_c_influential_details(asin, subcategory_json['also_bought_influential'], subcategory_json['also_viewed_influential'], subcategory_json['bought_together_influential'])
-		subcategory_json['#_products_related'] = r_b_s_c_no_products_related(asin, subcategory_json['#_products_related']['also_bought'], subcategory_json['#_products_related']['also_viewed']. subcategory_json['#_products_related']['bought_together'])
+		subcategory_json['#_products_related'] = r_b_s_c_no_products_related(asin, subcategory_json['#_products_related']['also_bought'], subcategory_json['#_products_related']['also_viewed'], subcategory_json['#_products_related']['bought_together'])
 			
 		writing_subcategory_file_pointer = io.create_file(subcategory_filepath)
 		io.write_line(writing_subcategory_file_pointer, json.dumps(subcategory_json))
@@ -414,6 +430,7 @@ def get_subcategory_details(tmp_category_dir, category, reviewerID, asin, pos_se
 		subcategory_json['total_time'] = 0
 		subcategory_json['engaged_time'] = 0
 		subcategory_json['products'] = [asin]
+		subcategory_json['buy_again'] = 0
 		subcategory_json['#_products_related'] = product_json['#_products_related']
 		subcategory_json['also_bought_influential'], subcategory_json['also_viewed_influential'], subcategory_json['bought_together_influential'] = product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential']
 
@@ -425,6 +442,8 @@ def get_category_details(tmp_category_dir, category, reviewerID, asin, pos_senti
 	global global_data
 
 	subcategory = '_'.join(categories[0][1:])
+	if '/' in subcategory:
+		subcategory = subcategory.replace('/', '')
 	category_filepath = tmp_category_dir + category + '/categories/' + category + '.json'
 
 	if category in global_data['available_categories']:
@@ -443,13 +462,18 @@ def get_category_details(tmp_category_dir, category, reviewerID, asin, pos_senti
 		category_json['rating'] += rating
 		category_json['total_time'] = unixtime.days_difference(category_json['first_purchase'], [year, month, date])
 		category_json['engaged_time'] = category_json['total_time'] - category_json['engaged_time']
+		if reviewerID in global_data['available_reviewers']:
+			repeated_purchase_value = repeated_purchase(tmp_category_dir, category, reviewerID, asin)
+		else:
+			repeated_purchase_value = 0
+		category_json['buy_again'] += repeated_purchase_value
 		if asin not in category_json['products']:
 			category_json['#_products'] += 1
 			category_json['products'].append(asin)
 			category_json['price'] += price_scale		
 
 		category_json['also_bought_influential'], category_json['also_viewed_influential'], category_json['bought_together_influential'] = get_r_b_s_c_influential_details(asin, category_json['also_bought_influential'], category_json['also_viewed_influential'], category_json['bought_together_influential'])
-		category_json['#_products_related'] = r_b_s_c_no_products_related(asin, category_json['#_products_related']['also_bought'], category_json['#_products_related']['also_viewed']. category_json['#_products_related']['bought_together'])
+		category_json['#_products_related'] = r_b_s_c_no_products_related(asin, category_json['#_products_related']['also_bought'], category_json['#_products_related']['also_viewed'], category_json['#_products_related']['bought_together'])
 	
 		writing_category_file_pointer = io.create_file(category_filepath)
 		io.write_line(writing_category_file_pointer, json.dumps(category_json))
@@ -470,6 +494,7 @@ def get_category_details(tmp_category_dir, category, reviewerID, asin, pos_senti
 		category_json['first_purchase'] = [year, month, date]
 		category_json['total_time'] = 0
 		category_json['engaged_time'] = 0
+		category_json['buy_again'] = 0
 		category_json['products'] = [asin]
 		category_json['#_products_related'] = product_json['#_products_related']
 		category_json['also_bought_influential'], category_json['also_viewed_influential'], category_json['bought_together_influential'] = product_json['also_bought_influential'], product_json['also_viewed_influential'], product_json['bought_together_influential']
@@ -487,10 +512,10 @@ def get_review_details(helpful, reviewText, overall):
 
 def unix_to_attributes(unixReviewTime):
 	date_time = unixtime.convert(unixReviewTime)
-	date = get_date(date_time)
-	month = get_month(date_time)
-	year = get_year(date_time)
-	day = get_day(date_time)
+	date = unixtime.get_date(date_time)
+	month = unixtime.get_month(date_time)
+	year = unixtime.get_year(date_time)
+	day = unixtime.get_day(date_time)
 
 	return int(date), int(month), int(year), int(day)
 
@@ -637,6 +662,8 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti,
 	global global_data
 
 	subcategory = '_'.join(categories[0][1:])
+	if '/' in subcategory:
+		subcategory = subcategory.replace('/', '')
 	file_path_dir = tmp_category_dir + category + '/products/' + '/'.join(categories[0]) + '/'
 	create_dir(file_path_dir)
 
@@ -665,8 +692,8 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti,
 
 		brand_json = get_brand_json(brand)
 		also_bought_influential, also_viewed_influential, bought_together_influential = brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential']
-		no_products_related = brand_json['#_products_related']
-		brand_json['#_products_related'] = prepare_r_b_s_c_no_products_related(asin, no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
+		no_products_related_dict = brand_json['#_products_related']
+		brand_json['#_products_related'] = prepare_r_b_s_c_no_products_related(asin, no_products_related_dict['also_bought'], no_products_related_dict['also_viewed'], no_products_related_dict['bought_together'])
 		brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential'] = prepare_r_b_s_c_influential_details(asin, also_bought_influential, also_viewed_influential, bought_together_influential)
 		writing_brand_file_pointer = io.create_file(global_data['available_brands'][brand])
 		io.write_line(writing_brand_file_pointer, json.dumps(brand_json))
@@ -674,8 +701,8 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti,
 
 		subcategory_json = get_subcategory_json(tmp_category_dir, category, subcategory)
 		also_bought_influential, also_viewed_influential, bought_together_influential = subcategory_json['also_bought_influential'], subcategory_json['also_viewed_influential'], subcategory_json['bought_together_influential']
-		no_products_related = subcategory_json['#_products_related']
-		subcategory_json['#_products_related'] = prepare_r_b_s_c_no_products_related(asin, no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
+		no_products_related_dict = subcategory_json['#_products_related']
+		subcategory_json['#_products_related'] = prepare_r_b_s_c_no_products_related(asin, no_products_related_dict['also_bought'], no_products_related_dict['also_viewed'], no_products_related_dict['bought_together'])
 		subcategory_json['also_bought_influential'], subcategory_json['also_viewed_influential'], subcategory_json['bought_together_influential'] = prepare_r_b_s_c_influential_details(asin, also_bought_influential, also_viewed_influential, bought_together_influential)
 		writing_subcategory_file_pointer = io.create_file(tmp_category_dir + category + '/subcategories/' + subcategory + '.json')
 		io.write_line(writing_subcategory_file_pointer, json.dumps(subcategory_json))
@@ -683,8 +710,8 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti,
 
 		category_json = get_category_json(tmp_category_dir, category)
 		also_bought_influential, also_viewed_influential, bought_together_influential = category_json['also_bought_influential'], category_json['also_viewed_influential'], category_json['bought_together_influential']
-		no_products_related = category_json['#_products_related']
-		category_json['#_products_related'] = prepare_r_b_s_c_no_products_related(asin, no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
+		no_products_related_dict = category_json['#_products_related']
+		category_json['#_products_related'] = prepare_r_b_s_c_no_products_related(asin, no_products_related_dict['also_bought'], no_products_related_dict['also_viewed'], no_products_related_dict['bought_together'])
 		category_json['also_bought_influential'], category_json['also_viewed_influential'], category_json['bought_together_influential'] = prepare_r_b_s_c_influential_details(asin, also_bought_influential, also_viewed_influential, bought_together_influential)
 		writing_category_file_pointer = io.create_file(tmp_category_dir + category + '/categories/' + category + '.json')
 		io.write_line(writing_category_file_pointer, json.dumps(category_json))
@@ -693,8 +720,8 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti,
 		if repeated_purchase_value:
 			reviewer_json = get_reviewer_json(reviewerID)
 			also_bought_influential, also_viewed_influential, bought_together_influential = reviewer_json['also_bought_influential'], reviewer_json['also_viewed_influential'], reviewer_json['bought_together_influential']
-			no_products_related = reviewer_json['#_products_related']
-			reviewer_json['#_products_related'] = prepare_r_b_s_c_no_products_related(asin, no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
+			no_products_related_dict = reviewer_json['#_products_related']
+			reviewer_json['#_products_related'] = prepare_r_b_s_c_no_products_related(asin, no_products_related_dict['also_bought'], no_products_related_dict['also_viewed'], no_products_related_dict['bought_together'])
 			reviewer_json['also_bought_influential'], reviewer_json['also_viewed_influential'], reviewer_json['bought_together_influential'] = prepare_r_b_s_c_influential_details(asin, also_bought_influential, also_viewed_influential, bought_together_influential)
 			writing_reviewer_file_pointer = io.create_file(global_data['available_reviewers'][reviewerID])
 			io.write_line(writing_reviewer_file_pointer, json.dumps(reviewer_json))
@@ -738,8 +765,8 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti,
 			for pbsc in update_needed:
 				brand_json = get_brand_json(pbsc[1])
 				also_bought_influential, also_viewed_influential, bought_together_influential = brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential']
-				no_products_related = brand_json['#_products_related']
-				brand_json['#_products_related'] = prepare_r_b_s_c_no_products_related(pbsc[0], no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
+				no_products_related_dict = brand_json['#_products_related']
+				brand_json['#_products_related'] = prepare_r_b_s_c_no_products_related(pbsc[0], no_products_related_dict['also_bought'], no_products_related_dict['also_viewed'], no_products_related_dict['bought_together'])
 				brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential'] = prepare_r_b_s_c_influential_details(pbsc[0], also_bought_influential, also_viewed_influential, bought_together_influential)
 				writing_brand_file_pointer = io.create_file(global_data['available_brands'][pbsc[1]])
 				io.write_line(writing_brand_file_pointer, json.dumps(brand_json))
@@ -747,8 +774,8 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti,
 
 				subcategory_json = get_subcategory_json(tmp_category_dir, pbsc[3], pbsc[2])
 				also_bought_influential, also_viewed_influential, bought_together_influential = subcategory_json['also_bought_influential'], subcategory_json['also_viewed_influential'], subcategory_json['bought_together_influential']
-				no_products_related = subcategory_json['#_products_related']
-				subcategory_json['#_products_related'] = prepare_r_b_s_c_no_products_related(pbsc[0], no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
+				no_products_related_dict = subcategory_json['#_products_related']
+				subcategory_json['#_products_related'] = prepare_r_b_s_c_no_products_related(pbsc[0], no_products_related_dict['also_bought'], no_products_related_dict['also_viewed'], no_products_related_dict['bought_together'])
 				subcategory_json['also_bought_influential'], subcategory_json['also_viewed_influential'], subcategory_json['bought_together_influential'] = prepare_r_b_s_c_influential_details(pbsc[0], also_bought_influential, also_viewed_influential, bought_together_influential)
 				writing_subcategory_file_pointer = io.create_file(tmp_category_dir + pbsc[3] + '/subcategories/' + pbsc[2] + '.json')
 				io.write_line(writing_subcategory_file_pointer, json.dumps(subcategory_json))
@@ -756,8 +783,8 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti,
 
 				category_json = get_category_json(tmp_category_dir, pbsc[3])
 				also_bought_influential, also_viewed_influential, bought_together_influential = category_json['also_bought_influential'], category_json['also_viewed_influential'], category_json['bought_together_influential']
-				no_products_related = category_json['#_products_related']
-				category_json['#_products_related'] = prepare_r_b_s_c_no_products_related(pbsc[0], no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
+				no_products_related_dict = category_json['#_products_related']
+				category_json['#_products_related'] = prepare_r_b_s_c_no_products_related(pbsc[0], no_products_related_dict['also_bought'], no_products_related_dict['also_viewed'], no_products_related_dict['bought_together'])
 				category_json['also_bought_influential'], category_json['also_viewed_influential'], category_json['bought_together_influential'] = prepare_r_b_s_c_influential_details(pbsc[0], also_bought_influential, also_viewed_influential, bought_together_influential)
 				writing_category_file_pointer = io.create_file(tmp_category_dir + pbsc[3] + '/categories/' + pbsc[3] + '.json')
 				io.write_line(writing_category_file_pointer, json.dumps(category_json))
@@ -765,8 +792,8 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti,
 
 				reviewer_json = get_reviewer_json(pbsc[4])
 				also_bought_influential, also_viewed_influential, bought_together_influential = reviewer_json['also_bought_influential'], reviewer_json['also_viewed_influential'], reviewer_json['bought_together_influential']
-				no_products_related = reviewer_json['#_products_related']
-				reviewer_json['#_products_related'] = prepare_r_b_s_c_no_products_related(pbsc[0], no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
+				no_products_related_dict = reviewer_json['#_products_related']
+				reviewer_json['#_products_related'] = prepare_r_b_s_c_no_products_related(pbsc[0], no_products_related_dict['also_bought'], no_products_related_dict['also_viewed'], no_products_related_dict['bought_together'])
 				reviewer_json['also_bought_influential'], reviewer_json['also_viewed_influential'], reviewer_json['bought_together_influential'] = prepare_r_b_s_c_influential_details(pbsc[0], also_bought_influential, also_viewed_influential, bought_together_influential)
 				writing_reviewer_file_pointer = io.create_file(global_data['available_reviewers'][pbsc[4]])
 				io.write_line(writing_reviewer_file_pointer, json.dumps(reviewer_json))
@@ -777,8 +804,8 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti,
 
 				brand_json = get_brand_json(pbsc[1])
 				also_bought_influential, also_viewed_influential, bought_together_influential = brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential']
-				no_products_related = brand_json['#_products_related']
-				brand_json['#_products_related'] = r_b_s_c_no_products_related(pbsc[0], no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
+				no_products_related_dict = brand_json['#_products_related']
+				brand_json['#_products_related'] = r_b_s_c_no_products_related(pbsc[0], no_products_related_dict['also_bought'], no_products_related_dict['also_viewed'], no_products_related_dict['bought_together'])
 				brand_json['also_bought_influential'], brand_json['also_viewed_influential'], brand_json['bought_together_influential'] = get_r_b_s_c_influential_details(pbsc[0], also_bought_influential, also_viewed_influential, bought_together_influential)
 				writing_brand_file_pointer = io.create_file(global_data['available_brands'][pbsc[1]])
 				io.write_line(writing_brand_file_pointer, json.dumps(brand_json))
@@ -786,8 +813,8 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti,
 
 				subcategory_json = get_subcategory_json(tmp_category_dir, pbsc[3], pbsc[2])
 				also_bought_influential, also_viewed_influential, bought_together_influential = subcategory_json['also_bought_influential'], subcategory_json['also_viewed_influential'], subcategory_json['bought_together_influential']
-				no_products_related = subcategory_json['#_products_related']
-				subcategory_json['#_products_related'] = r_b_s_c_no_products_related(pbsc[0], no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
+				no_products_related_dict = subcategory_json['#_products_related']
+				subcategory_json['#_products_related'] = r_b_s_c_no_products_related(pbsc[0], no_products_related_dict['also_bought'], no_products_related_dict['also_viewed'], no_products_related_dict['bought_together'])
 				subcategory_json['also_bought_influential'], subcategory_json['also_viewed_influential'], subcategory_json['bought_together_influential'] = get_r_b_s_c_influential_details(pbsc[0], also_bought_influential, also_viewed_influential, bought_together_influential)
 				writing_subcategory_file_pointer = io.create_file(tmp_category_dir + pbsc[3] + '/subcategories/' + pbsc[2] + '.json')
 				io.write_line(writing_subcategory_file_pointer, json.dumps(subcategory_json))
@@ -795,8 +822,8 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti,
 
 				category_json = get_category_json(tmp_category_dir, pbsc[3])
 				also_bought_influential, also_viewed_influential, bought_together_influential = category_json['also_bought_influential'], category_json['also_viewed_influential'], category_json['bought_together_influential']
-				no_products_related = category_json['#_products_related']
-				category_json['#_products_related'] = r_b_s_c_no_products_related(pbsc[0], no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
+				no_products_related_dict = category_json['#_products_related']
+				category_json['#_products_related'] = r_b_s_c_no_products_related(pbsc[0], no_products_related_dict['also_bought'], no_products_related_dict['also_viewed'], no_products_related_dict['bought_together'])
 				category_json['also_bought_influential'], category_json['also_viewed_influential'], category_json['bought_together_influential'] = get_r_b_s_c_influential_details(pbsc[0], also_bought_influential, also_viewed_influential, bought_together_influential)
 				writing_category_file_pointer = io.create_file(tmp_category_dir + pbsc[3] + '/categories/' + pbsc[3] + '.json')
 				io.write_line(writing_category_file_pointer, json.dumps(category_json))
@@ -804,8 +831,8 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti,
 			
 				reviewer_json = get_reviewer_json(pbsc[4])
 				also_bought_influential, also_viewed_influential, bought_together_influential = reviewer_json['also_bought_influential'], reviewer_json['also_viewed_influential'], reviewer_json['bought_together_influential']
-				no_products_related = reviewer_json['#_products_related']
-				reviewer_json['#_products_related'] = r_b_s_c_no_products_related(pbsc[0], no_products_related['also_bought'], no_products_related['also_viewed'], no_products_related['bought_together'])
+				no_products_related_dict = reviewer_json['#_products_related']
+				reviewer_json['#_products_related'] = r_b_s_c_no_products_related(pbsc[0], no_products_related_dict['also_bought'], no_products_related_dict['also_viewed'], no_products_related_dict['bought_together'])
 				reviewer_json['also_bought_influential'], reviewer_json['also_viewed_influential'], reviewer_json['bought_together_influential'] = get_r_b_s_c_influential_details(pbsc[0], also_bought_influential, also_viewed_influential, bought_together_influential)
 				writing_reviewer_file_pointer = io.create_file(global_data['available_reviewers'][pbsc[4]])
 				io.write_line(writing_reviewer_file_pointer, json.dumps(reviewer_json))
@@ -815,15 +842,15 @@ def get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti,
 
 def get_attributes(json_line):
 	FLAG = True
-
+	
 	if 'reviewerID' in json_line:
-		reviewerID = json_line['reviewerID']
+		reviewerID = str(json_line['reviewerID'])
 	else:
 		FLAG = False
 		reviewerID = ''
-
+	
 	if 'asin' in json_line:
-		asin = json_line['asin']
+		asin = str(json_line['asin'])
 	else:
 		asin = ''
 
@@ -833,12 +860,12 @@ def get_attributes(json_line):
 		helpful = [0, 0]
 
 	if 'reviewText'	in json_line:
-		reviewText = json_line['reviewText']
+		reviewText = str(json_line['reviewText'])
 	else:
 		reviewText = ''
 
 	if 'overall' in json_line:
-		overall = json_line['overall']
+		overall = float(json_line['overall'])
 	else:
 		overall = 0.0
 
@@ -848,7 +875,7 @@ def get_attributes(json_line):
 		summary = ''
 
 	if 'unixReviewTime' in json_line:
-		unixReviewTime = json_line['unixReviewTime']
+		unixReviewTime = str(json_line['unixReviewTime'])
 	else:
 		unixReviewTime = ''
 
@@ -858,7 +885,7 @@ def get_attributes(json_line):
 		title = ''
 
 	if 'price' in json_line:
-		price = json_line['price']
+		price = float(json_line['price'])
 	else:
 		FLAG = False
 		price = ''
@@ -882,7 +909,7 @@ def get_attributes(json_line):
 		salesRank = ''
 
 	if 'brand' in json_line:
-		brand = json_line['brand']
+		brand = str(json_line['brand'])
 	else:
 		FLAG = False
 		brand = ''
@@ -892,7 +919,7 @@ def get_attributes(json_line):
 	else:
 		FLAG = False
 		categories = [[]]
-
+	
 	return FLAG, reviewerID, asin, helpful, reviewText, overall, summary, unixReviewTime, title, price, related, salesRank, brand, categories
 
 def get_pickle_object(file_path):
@@ -1115,7 +1142,7 @@ def write_csv(tmp_category_dir, csv_file_path, product_json, brand_json, subcate
 	if category_json['total_reacted'] == 0:
 		csv_list.append(str(0))
 	else:
-		csv_list.append(str(csv_list.append(str(category_json['helpfulness'])) / category_json['total_reacted']))
+		csv_list.append(str(category_json['helpfulness'] / category_json['total_reacted']))
 	csv_list.append(str(category_json['rating']))
 	csv_list.append(str(category_json['price']))
 	csv_list.append(str(category_json['total_time']))
@@ -1467,44 +1494,45 @@ def synch_data(paths, tmp_category_dir):
 		reading_file_pointer = io.read_file(file_path)
 		line_no = 1
 		for line in reading_file_pointer:
-			try:
-				json_line = json.loads(line)
-				asin = json_line['asin']
-				meta_file_no = str(index[asin])
+			#try:
+			json_line = json.loads(line)
+			asin = json_line['asin']
+			meta_file_no = str(index[asin])
 
-				if prev_meta_file_no != meta_file_no:
+			if prev_meta_file_no != meta_file_no:
+				meta = get_pickle_object(meta_dir_path + 'meta' + meta_file_no + '.pkl')
+			else:
+				if not same_category_flag:
 					meta = get_pickle_object(meta_dir_path + 'meta' + meta_file_no + '.pkl')
-				else:
-					if not same_category_flag:
-						meta = get_pickle_object(meta_dir_path + 'meta' + meta_file_no + '.pkl')
-				prev_meta_file_no = meta_file_no
-				
-				product_json = meta[asin]
-				merged_json = dict(json_line, **product_json)
-				FLAG, reviewerID, asin, helpful, reviewText, overall, summary, unixReviewTime, title, price, related, salesRank, brand, categories = get_attributes(merged_json)
-
-				if FLAG:
-					sentiment, total_reacted, helpfulness, rating = get_review_details(helpful, reviewText, overall)
-					date, month, year, day = unix_to_attributes(unixReviewTime)
-					pos_senti, neg_senti = get_sentiment_scale(sentiment)
-					price_scale = get_price_scale(price, category)
-					subcategory = '_'.join(categories[0][1:])
-					if len(categories[0]) > 1:
-						get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price_scale, related, brand, categories)
-						get_brand_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price_scale, related, brand, categories)
-						get_subcategory_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price_scale, related, brand, categories)
-						get_category_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price_scale, related, brand, categories)
-						get_reviewer_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price_scale, related, brand, categories)
-						product_json, brand_json, subcategory_json, category_json, reviewer_json = get_json(tmp_category_dir, asin, brand, subcategory, category, reviewerID)
-						write_csv(tmp_category_dir, csv_file_path, product_json, brand_json, subcategory_json, category_json, reviewer_json, total_reacted, helpfulness, rating, date, month, year, day, price_scale, sentiment)
-				else:
-					print('Till now reject')
-
-				line_no += 1
-				same_category_flag = True
-			except:
-				print('🐛 ERROR:\nFILE_PATH:', file_path, '\nLINE_NO:', line_no, '\nLINE:', line)
-				pass
+			prev_meta_file_no = meta_file_no
+			
+			product_json = meta[asin]
+			merged_json = dict(json_line, **product_json)
+			FLAG, reviewerID, asin, helpful, reviewText, overall, summary, unixReviewTime, title, price, related, salesRank, brand, categories = get_attributes(merged_json)
+			
+			if FLAG:
+				sentiment, total_reacted, helpfulness, rating = get_review_details(helpful, reviewText, overall)
+				date, month, year, day = unix_to_attributes(unixReviewTime)
+				pos_senti, neg_senti = get_sentiment_scale(sentiment)
+				price_scale = get_price_scale(price, category)
+				subcategory = '_'.join(categories[0][1:])
+				if '/' in subcategory:
+					subcategory = subcategory.replace('/', '')
+				if len(categories[0]) > 1:
+					get_product_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price_scale, related, brand, categories)
+					get_brand_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price_scale, related, brand, categories)
+					get_subcategory_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price_scale, related, brand, categories)
+					get_category_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price_scale, related, brand, categories)
+					get_reviewer_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price_scale, related, brand, categories)
+					product_json, brand_json, subcategory_json, category_json, reviewer_json = get_json(tmp_category_dir, asin, brand, subcategory, category, reviewerID)
+					write_csv(tmp_category_dir, csv_file_path, product_json, brand_json, subcategory_json, category_json, reviewer_json, total_reacted, helpfulness, rating, date, month, year, day, price_scale, sentiment)
+					print('PERFECT')
+			
+			line_no += 1
+			same_category_flag = True
+			#except:
+			#	print('🐛 ERROR:\nFILE_PATH:', file_path, '\nLINE_NO:', line_no, '\nLINE:', merged_json)
+			#	pass
 
 		reading_file_pointer.close()
 		print('Path no.', path_no, 'DONE:', file_path)
