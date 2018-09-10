@@ -7,7 +7,6 @@ import pickle
 import synch
 import os
 
-#change path
 price_details_path = '/media/dell/Seagate Expansion Drive/CE_paper/Implementation/tmp_data/price.pkl'
 with open(price_details_path, 'rb') as f:
 	price_scale_dict = pickle.load(f)
@@ -1467,9 +1466,9 @@ def write_csv(tmp_category_dir, csv_file_path, product_json, brand_json, subcate
 	csv_file_pointer.close()
 
 def synch_data(paths, tmp_category_dir):
-	#change path
 	csv_file_path = '/media/dell/Seagate Expansion Drive/CE_paper/Implementation/tmp_data/dataset.csv'
-	
+	written_no = 0
+
 	prev_category = ''
 	index = {}
 	index_file_pointer = None
@@ -1526,17 +1525,17 @@ def synch_data(paths, tmp_category_dir):
 					get_reviewer_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price_scale, related, brand, categories)
 					product_json, brand_json, subcategory_json, category_json, reviewer_json = get_json(tmp_category_dir, asin, brand, subcategory, category, reviewerID)
 					write_csv(tmp_category_dir, csv_file_path, product_json, brand_json, subcategory_json, category_json, reviewer_json, total_reacted, helpfulness, rating, date, month, year, day, price_scale, sentiment)
-					print('PERFECT')
-			
+					written_no += 1
 			line_no += 1
 			same_category_flag = True
 			#except:
-			#	print('🐛 ERROR:\nFILE_PATH:', file_path, '\nLINE_NO:', line_no, '\nLINE:', merged_json)
+			#	print('ERROR:\nFILE_PATH:', file_path, '\nLINE_NO:', line_no, '\nLINE:', merged_json)
 			#	pass
 
 		reading_file_pointer.close()
 		print('Path no.', path_no, 'DONE:', file_path)
 		path_no += 1
+	print('Total numbers of reviews written is: ', written_no)
 
 def create_category_dirs(tmp_category_dir, category_names):
 	for category in category_names:
@@ -1549,7 +1548,6 @@ def write_feed_data(tmp_category_dir, category_names):
 	synch_data(paths, tmp_category_dir)
 
 def test():
-	#change path
 	tmp_category_dir = '/media/dell/Seagate Expansion Drive/CE_paper/Implementation/tmp_data/categories/'
 	category_names = ['Electronics']
 	write_feed_data(tmp_category_dir, category_names)
