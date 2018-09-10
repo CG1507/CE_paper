@@ -374,8 +374,6 @@ def get_subcategory_details(tmp_category_dir, category, reviewerID, asin, pos_se
 	global global_data
 
 	subcategory = '_'.join(categories[0][1:])
-	if '/' in subcategory:
-		subcategory = subcategory.replace('/', '')
 	subcategory_filepath = tmp_category_dir + category + '/subcategories/' + subcategory + '.json'
 
 	if subcategory in global_data['available_subcategories']:
