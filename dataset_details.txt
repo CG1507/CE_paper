@@ -1,0 +1,53 @@
+Total number of products in Amazon Instant Video is 30649
+Total number of products in Apps for Android is 61552
+Total number of products in Automotive is 331091
+Total number of products in Baby is 71318
+Total number of products in Beauty is 259205
+Total number of products in Books is 2370586
+Total number of products in CDs and Vinyl is 492800
+Total number of products in Cell Phones and Accessories is 346794
+Total number of products in Clothing, Shoes and Jewelry is 1503385
+Total number of products in Digital Music is 279900
+Total number of products in Electronics is 498197
+Total number of products in Grocery and Gourmet Food is 171761
+Total number of products in Health and Personal Care is 263033
+Total number of products in Home and Kitchen is 436989
+Total number of products in Kindle Store is 434703
+Total number of products in Movies and TV is 208322
+Total number of products in Musical Instruments is 84902
+Total number of products in Office Products is 134839
+Total number of products in Patio, Lawn and Garden is 109095
+Total number of products in Pet Supplies is 110708
+Total number of products in Sports and Outdoors is 532198
+Total number of products in Tools and Home Improvement is 269121
+Total number of products in Toys and Games is 336073
+Total number of products in Video Games is 50954
+
+Total number of reviews in Amazon Instant Video is 583934
+🐛 Error generated in reviews at 162468 in Apps for Android
+Total number of reviews in Automotive is 1373769
+Total number of reviews in Baby is 915447
+Total number of reviews in Beauty is 2023071
+Total number of reviews in Books is 22507156
+Total number of reviews in CDs and Vinyl is 3749005
+Total number of reviews in Cell Phones and Accessories is 3447250
+Total number of reviews in Clothing, Shoes and Jewelry is 5748921
+Total number of reviews in Digital Music is 836007
+Total number of reviews in Electronics is 7824483
+Total number of reviews in Grocery and Gourmet Food is 1297157
+Total number of reviews in Health and Personal Care is 2982327
+Total number of reviews in Home and Kitchen is 4253927
+Total number of reviews in Kindle Store is 3205468
+Total number of reviews in Movies and TV is 4607048
+Total number of reviews in Musical Instruments is 500177
+Total number of reviews in Office Products is 1243187
+Total number of reviews in Patio, Lawn and Garden is 993491
+Total number of reviews in Pet Supplies is 1235317
+Total number of reviews in Sports and Outdoors is 3268696
+Total number of reviews in Tools and Home Improvement is 1926048
+Total number of reviews in Toys and Games is 2252772
+Total number of reviews in Video Games is 1324754
+
+Years: [1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014] 
+Months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+Days: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
