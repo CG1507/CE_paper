@@ -21,6 +21,12 @@ global_data = {
 				'unavailable_products': {}
 			  }
 
+def save_global_data():
+	global global_data
+	global_data_file_pointer = open('./global_data.pkl', 'wb')
+	pickle.dump(global_data, global_data_file_pointer)
+	global_data_file_pointer.close()
+
 def get_sentiment_scale(sentiment):
 	if sentiment >= 0:
 		return 1, 0
@@ -1536,6 +1542,7 @@ def synch_data(paths, tmp_category_dir):
 					get_reviewer_details(tmp_category_dir, category, reviewerID, asin, pos_senti, neg_senti, total_reacted, helpfulness, rating, date, month, year, price_scale, related, brand, categories)
 					product_json, brand_json, subcategory_json, category_json, reviewer_json = get_json(tmp_category_dir, asin, brand, subcategory, category, reviewerID)
 					write_csv(tmp_category_dir, csv_file_path, product_json, brand_json, subcategory_json, category_json, reviewer_json, total_reacted, helpfulness, rating, date, month, year, day, price_scale, sentiment)
+					save_global_data()
 					written_no += 1
 			line_no += 1
 			same_category_flag = True
