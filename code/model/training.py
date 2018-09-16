@@ -3,7 +3,7 @@ from utils import io
 from sklearn.preprocessing import MinMaxScaler
 import pandas as pd
 
-def normalize_data(data_file_path):
+def save_normalize_data(data_file_path):
 	dataset = pd.read_csv(data_file_path)
 	values = dataset.values	
 	print('Reading done')
@@ -21,7 +21,7 @@ def normalize_data(data_file_path):
 
 def test():
 	data_file_path = '/media/dell/Seagate Expansion Drive/CE_paper/Implementation/final_data/dataset_0.csv'
-	normalize_data(data_file_path)
+	save_normalize_data(data_file_path)
 
 if __name__ == "__main__":
 	test()
