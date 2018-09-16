@@ -54,7 +54,11 @@ def see_result():
 	
 	line_no = 1
 	for line in reading_file_pointer:
-		print(line)
+		if line_no <= 3:
+			print(line)
+		else:
+			break
+		line_no += 1
 
 def test():
 	data_folder = "/media/dell/Seagate Expansion Drive/CE_paper/Dataset/Amazon Dataset/categories/"
