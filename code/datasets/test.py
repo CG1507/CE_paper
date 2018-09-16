@@ -50,12 +50,11 @@ def see_data(data_folder, category_names):
 				pass
 
 def see_result():
-	reading_file_pointer = io.read_file('/media/dell/Seagate Expansion Drive/CE_paper/Implementation/final_data/dataset_0.csv')
+	reading_file_pointer = io.read_file('/media/dell/Seagate Expansion Drive/CE_paper/Implementation/final_data/dataset_0_norm.csv')
 	
 	line_no = 1
 	for line in reading_file_pointer:
-		print(line_no)
-		line_no += 1
+		print(line)
 
 def test():
 	data_folder = "/media/dell/Seagate Expansion Drive/CE_paper/Dataset/Amazon Dataset/categories/"
@@ -66,7 +65,6 @@ def test():
 	#result = core.get_sentiment('I love you!', on_base = "t", flag_prob=True)
 	#print(result)
 	see_result()
-
 
 if __name__ == "__main__":
 	test()
