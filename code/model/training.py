@@ -2,6 +2,10 @@ import model
 from utils import io
 from sklearn.preprocessing import MinMaxScaler
 import pandas as pd
+import numpy as np
+import math
+import conv_lstm
+from keras.callbacks import ModelCheckpoint, TensorBoard, ReduceLROnPlateau, EarlyStopping
 
 def save_normalize_data(data_file_path):
 	dataset = pd.read_csv(data_file_path)
@@ -21,7 +25,10 @@ def save_normalize_data(data_file_path):
 
 def test():
 	data_file_path = '/media/dell/Seagate Expansion Drive/CE_paper/Implementation/final_data/dataset_0.csv'
-	save_normalize_data(data_file_path)
+	norm_data_file_path = '/media/dell/Seagate Expansion Drive/CE_paper/Implementation/final_data/dataset_0_norm.csv'
+	#save_normalize_data(data_file_path)
+	small_data_file_path = '/media/dell/Seagate Expansion Drive/CE_paper/Implementation/final_data/small_data.csv'
+	train_it(small_data_file_path)
 
 if __name__ == "__main__":
 	test()
