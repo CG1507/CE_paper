@@ -82,6 +82,30 @@ def loss_callback():
 	lrate = initial_lrate * math.pow(drop, math.floor((1+epoch)/epochs_drop))
 	return lrate
 
+def train_it(data_file_path):
+	batch_size = 1
+	time_step = 100
+	rows = 10
+	cols = 382
+	channel = 1
+	weight_path = None
+
+	train_data_generator = KerasBatchGenerator(data_file_path, batch_size, time_step, rows, cols, channel)
+	model = conv_lstm.conv_lstm_2d(weight_path)
+	
+	tensorboard_call = TensorBoard(log_dir='./logs', histogram_freq=0, batch_size=batch_size, write_graph=True, write_grads=True, write_images=True, embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None, embeddings_data=None)
+	modelcheckpoint_call = ModelCheckpoint('weights.{epoch:02d}-{val_loss:.2f}.hdf5', monitor='val_loss', verbose=0, save_best_only=False, save_weights_only=False, mode='auto', period=1)
+	earlystopping_call = EarlyStopping(monitor='val_loss', min_delta=0, patience=0, verbose=0, mode='auto', baseline=None)
+	lrdecay_call = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=10, verbose=0, mode='auto', min_delta=0.0001, cooldown=0, min_lr=0)
+
+	model.fit_generator(train_data_generator.generate(), steps_per_epoch=10, epochs=1, 
+							verbose=1, callbacks=[tensorboard_call, modelcheckpoint_call, earlystopping_call, lrdecay_call], validation_data=None, validation_steps=None, class_weight=None, 
+							max_queue_size=10, workers=1, use_multiprocessing=False, 
+							shuffle=True, initial_epoch=0)
+	
+	model.save('final_lstm_reg.model')
+	print('MODEL SAVED!')
+
 def test():
 	data_file_path = '/media/dell/Seagate Expansion Drive/CE_paper/Implementation/final_data/dataset_0.csv'
 	norm_data_file_path = '/media/dell/Seagate Expansion Drive/CE_paper/Implementation/final_data/dataset_0_norm.csv'
