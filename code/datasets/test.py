@@ -60,6 +60,19 @@ def see_result():
 			break
 		line_no += 1
 
+def create_small_data():
+	reading_file_pointer = io.read_file('/media/dell/Seagate Expansion Drive/CE_paper/Implementation/final_data/dataset_0_norm.csv')
+	writing_file_pointer = io.create_file('/media/dell/Seagate Expansion Drive/CE_paper/Implementation/final_data/small_data.csv')
+	line_no = 1
+	for line in reading_file_pointer:
+		if line_no <= 4000:
+			io.write_line(writing_file_pointer, line + '\n')
+		else:
+			break
+		line_no += 1
+	reading_file_pointer.close()
+	writing_file_pointer.close()	
+
 def test():
 	data_folder = "/media/dell/Seagate Expansion Drive/CE_paper/Dataset/Amazon Dataset/categories/"
 	#category_names = io.list_dirs(data_folder)
@@ -68,7 +81,8 @@ def test():
 	#analyze_categories(data_folder, category_names)
 	#result = core.get_sentiment('I love you!', on_base = "t", flag_prob=True)
 	#print(result)
-	see_result()
-
+	#see_result()
+	create_small_data()
+	
 if __name__ == "__main__":
 	test()
