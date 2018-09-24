@@ -60,7 +60,8 @@ def test(validation_data_file_path, model_file_path):
 	rows = 10
 	cols = 382
 	channel = 1
-	
+
+	validation_data_generator = KerasBatchGenerator(validation_data_file_path, batch_size, time_step, rows, cols, channel)
 	model = load_model(model_file_path)
 	
 
