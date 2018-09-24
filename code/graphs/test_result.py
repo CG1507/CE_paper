@@ -54,10 +54,20 @@ class KerasBatchGenerator(object):
 				self.index -= self.rows
 			yield x, y
 
-def test():
+def test(validation_data_file_path, model_file_path):
+	batch_size = 1
+	time_step = 100
+	rows = 10
+	cols = 382
+	channel = 1
+	
+	model = load_model(model_file_path)
+	
+
+def run():
 	model_file_path = ''
 	validation_data_file_path = 'gdrive/My Drive/colab_training/final_data/validation_dataset_0_norm.csv'
-
+	test(validation_data_file_path, model_file_path)
 
 if __name__ == "__main__":
-	test()
+	run()
