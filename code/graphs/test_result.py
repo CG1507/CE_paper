@@ -2,6 +2,7 @@ import graphs
 from utils import io
 import pandas as pd
 import numpy as np
+import json
 from keras.models import load_model
 
 class KerasBatchGenerator(object):
@@ -54,6 +55,14 @@ class KerasBatchGenerator(object):
 				self.index -= self.rows
 			yield x, y
 
+def save_graph_data(model, validation_data_generator):
+	number = 1
+	for x, y in validation_data_generator.generate():
+		pred_val = model.predict(x)
+		writing_file_pointer = io.append_file('predicted.json')
+		io.write_line(writing_file_pointer, json.dumps({'x': x, 'pred_val': pred_val}) + '\n')
+		writing_file_pointer.close()
+
 def test(validation_data_file_path, model_file_path):
 	batch_size = 1
 	time_step = 100
@@ -63,7 +72,7 @@ def test(validation_data_file_path, model_file_path):
 
 	validation_data_generator = KerasBatchGenerator(validation_data_file_path, batch_size, time_step, rows, cols, channel)
 	model = load_model(model_file_path)
-	
+
 
 def run():
 	model_file_path = ''
