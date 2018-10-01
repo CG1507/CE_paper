@@ -1,9 +1,10 @@
-import graphs
-from utils import io
+#import graphs
+#from utils import io
 import pandas as pd
 import numpy as np
-import json
+import pickle
 from keras.models import load_model
+import conv_lstm
 
 class KerasBatchGenerator(object):
 	def __init__(self, file_path, batch_size, time_step, rows, cols, channel):
@@ -55,15 +56,17 @@ class KerasBatchGenerator(object):
 				self.index -= self.rows
 			yield x, y
 
-def save_graph_data(model, validation_data_generator):
+def save_graph_data(model, validation_data_generator, val_steps):
+	no = 1
 	for x, y in validation_data_generator.generate():
+		if no > val_steps:
+			break
 		pred_val = model.predict(x)
-		json_line = {}
-		json_line['x'] = x
-		json_line['pred_val'] = pred_val
-		writing_file_pointer = io.append_file('predicted.json')
-		io.write_line(writing_file_pointer, json.dumps(json_line) + '\n')
-		writing_file_pointer.close()
+		print(pred_val)
+		
+		with open('predicted' + str(no) + '.pkl', 'wb') as writing_file_pointer:
+			pickle.dump([x, pred_val], writing_file_pointer)
+		no += 1
 
 def test(validation_data_file_path, model_file_path):
 	batch_size = 1
@@ -73,8 +76,10 @@ def test(validation_data_file_path, model_file_path):
 	channel = 1
 
 	validation_data_generator = KerasBatchGenerator(validation_data_file_path, batch_size, time_step, rows, cols, channel)
-	model = load_model(model_file_path)
-	save_graph_data(model, validation_data_generator)
+	val_steps = validation_data_generator.total_length//((time_step * rows * batch_size) + rows)
+	#model = load_model(model_file_path)
+	model = conv_lstm.conv_lstm_2d('gdrive/My Drive/colab_training/code/model/weights.180.hdf5')
+	save_graph_data(model, validation_data_generator, val_steps)
 
 def run():
 	model_file_path = 'gdrive/My Drive/colab_training/code/model/model.180-0.72.hdf5'

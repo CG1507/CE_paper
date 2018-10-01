@@ -1,9 +1,12 @@
-import graphs
-from utils import io
+#import graphs
+#from utils import io
+import io
+from keras.models import load_model
+from keras.models import Model
 import pandas as pd
 import numpy as np
-import json
-from keras.models import load_model
+import pickle
+import keras.backend as K
 
 class KerasBatchGenerator(object):
 	def __init__(self, file_path, batch_size, time_step, rows, cols, channel):
@@ -55,15 +58,17 @@ class KerasBatchGenerator(object):
 				self.index -= self.rows
 			yield x, y
 
-def save_graph_data(model, validation_data_generator):
+def save_graph_data(model, validation_data_generator, val_steps):
+	no = 1
 	for x, y in validation_data_generator.generate():
-		pred_val = model.predict(x)
-		json_line = {}
-		json_line['x'] = x
-		json_line['pred_val'] = pred_val
-		writing_file_pointer = io.append_file('predicted.json')
-		io.write_line(writing_file_pointer, json.dumps(json_line) + '\n')
-		writing_file_pointer.close()
+		if no > val_steps:
+			break
+		pred_val = model.predict_on_batch(x)
+		print(pred_val)
+		
+		with open('predicted' + str(no) + '.pkl', 'wb') as writing_file_pointer:
+			pickle.dump([x, pred_val], writing_file_pointer)
+		no += 1
 
 def test(validation_data_file_path, model_file_path):
 	batch_size = 1
@@ -73,11 +78,24 @@ def test(validation_data_file_path, model_file_path):
 	channel = 1
 
 	validation_data_generator = KerasBatchGenerator(validation_data_file_path, batch_size, time_step, rows, cols, channel)
-	model = load_model(model_file_path)
-	save_graph_data(model, validation_data_generator)
+	val_steps = validation_data_generator.total_length//((time_step * rows * batch_size) + rows)
+	#model = load_model(model_file_path)
+	#print('model loaded')
+	
+	import conv_lstm
+	#weight_path = '/home/dell/Desktop/weights.180.hdf5'
+	weight_path = 'gdrive/My Drive/colab_training/code/model/weights.180.hdf5'
+	model = conv_lstm.conv_lstm_2d(weight_path)
+
+	#model = Model(inputs=model.get_layer('conv_lst_m2d_1').input, outputs=model.get_layer('batch_normalization_4').output)
+	#save_graph_data(model, validation_data_generator, val_steps)
+
+	for x, y in validation_data_generator.generate():
+		print(model.predict(x))
 
 def run():
-	model_file_path = 'gdrive/My Drive/colab_training/code/model/model.180-0.72.hdf5'
+	model_file_path = '/home/dell/Desktop/model.01-103278.62.hdf5'
+	#validation_data_file_path = '/media/dell/Seagate Expansion Drive/CE_paper/Implementation/final_data/validation_dataset_0_norm.csv'
 	validation_data_file_path = 'gdrive/My Drive/colab_training/final_data/validation_dataset_0_norm.csv'
 	test(validation_data_file_path, model_file_path)
 
